@@ -29,13 +29,23 @@
 
 ---
 
+> **Dark mode reacts to a preference. Sol reacts to place and time.**
+
+Most apps treat theming as a binary choice — light or dark, on or off, a toggle buried in settings.
+
+Sol replaces that with something alive. It computes the sun's real position from the user's location, timezone, and current time, then smoothly transitions the interface through **9 solar phases** — dawn, sunrise, morning, solar noon, afternoon, sunset, dusk, night, and midnight — with animated blends, optional weather layers, and 10 richly designed skins.
+
+No API key. No manual toggle. Your UI just follows the sun.
+
+---
+
 ```bash
 bun add @qodin-co/sol
 # or
 npm install @qodin-co/sol
 ```
 
-`@qodin-co/sol` gives you a full `SolarWidget`, a `CompactWidget`, 10 skins, 9 solar phases, optional live weather, optional flag display, and a dev-only timeline scrubber via `SolarDevTools`. No solar API required — solar position is computed locally from latitude, longitude, timezone, and current time.
+`@qodin-co/sol` gives you a full `SolarWidget`, a `CompactWidget`, 10 skins, 9 solar phases, optional live weather, optional flag display, and a dev-only timeline scrubber via `SolarDevTools`. Solar position is computed locally from latitude, longitude, timezone, and current time — no solar API required.
 
 ---
 
@@ -328,6 +338,10 @@ The full card widget. Reads its design from the nearest `SolarThemeProvider`.
 
 ## CompactWidget
 
+<div align="center">
+ <img src=".github/compact-banner.png" alt="CompactWidget skins - Tide at Drift, Paper at Morning, Meridian at Dawn" width="100%"/>
+ </div>
+
 The slim pill/bar variant. Accepts an optional `design` prop to override the provider's active skin.
 
 ```tsx
@@ -431,7 +445,9 @@ Use `simulatedDate` for realistic continuous previews. Use `phaseOverride` for s
 
 ## SolarDevTools
 
-A dev-only bottom-fixed pill for scrubbing through the day. Imported from a dedicated subpath — never included in production bundles unless explicitly imported.
+When your interface depends on live solar time, manual testing breaks down fast — you can't wait until sunset to test sunset. `SolarDevTools` lets you scrub through the full day in seconds, preview every one of the **9 phases**, test every skin against every time of day, and catch phase-specific visual bugs before your users do.
+
+Imported from a dedicated subpath — never included in production bundles unless explicitly imported.
 
 ```tsx
 import { SolarDevTools } from '@qodin-co/sol/devtools';
