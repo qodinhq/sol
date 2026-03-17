@@ -318,14 +318,18 @@ function arcOrbPos(progress: number) {
 function buildArcPath(pts = 120): string {
   return Array.from({ length: pts }, (_, i) => {
     const t = i / (pts - 1);
-    return `${i === 0 ? 'M' : 'L'}${(t * W).toFixed(1)},${(ARC_BASE_Y - ARC_HEIGHT * 4 * t * (1 - t)).toFixed(1)}`;
+    return `${i === 0 ? 'M' : 'L'}${(t * W).toFixed(1)},${(
+      ARC_BASE_Y - ARC_HEIGHT * 4 * t * (1 - t)
+    ).toFixed(1)}`;
   }).join(' ');
 }
 
 function buildArcGroovePath(offset: number, pts = 120): string {
   return Array.from({ length: pts }, (_, i) => {
     const t = i / (pts - 1);
-    return `${i === 0 ? 'M' : 'L'}${(t * W).toFixed(1)},${(ARC_BASE_Y - ARC_HEIGHT * 4 * t * (1 - t) + offset).toFixed(1)}`;
+    return `${i === 0 ? 'M' : 'L'}${(t * W).toFixed(1)},${(
+      ARC_BASE_Y - ARC_HEIGHT * 4 * t * (1 - t) + offset
+    ).toFixed(1)}`;
   }).join(' ');
 }
 
@@ -356,7 +360,9 @@ function useSundialOrbRaf(refs: SundialOrbRefs) {
     }
   };
   const setOpacity = (o: number) => {
-    if (refs.orbGroup.current) refs.orbGroup.current.style.opacity = String(o);
+    if (refs.orbGroup.current) {
+      refs.orbGroup.current.style.opacity = String(o);
+    }
   };
   const anim = () => {
     const d = tgtP.current - curP.current;
@@ -487,7 +493,13 @@ const TRANSFORM_ORIGINS: Record<ExpandDirection, string> = {
   'bottom-left': 'bottom left',
   'bottom-center': 'bottom center',
 };
-const SIZE_SCALE: Record<string, number> = { xs: 0.55, sm: 0.7, md: 0.82, lg: 0.92, xl: 1.05 };
+const SIZE_SCALE: Record<string, number> = {
+  xs: 0.55,
+  sm: 0.7,
+  md: 0.82,
+  lg: 0.92,
+  xl: 1.05,
+};
 const PHASE_TEMP: Record<SolarPhase, number> = {
   midnight: 12,
   night: 13,
@@ -630,7 +642,12 @@ function useWeatherData(lat: number | null, lon: number | null): LiveWeather | n
   return w;
 }
 
-const SPRING_EXPAND = { type: 'spring' as const, stiffness: 520, damping: 38, mass: 0.8 };
+const SPRING_EXPAND = {
+  type: 'spring' as const,
+  stiffness: 520,
+  damping: 38,
+  mass: 0.8,
+};
 const SPRING_CONTENT = { type: 'spring' as const, stiffness: 550, damping: 42 };
 
 // ─── SundialExtras ────────────────────────────────────────────────────────────
@@ -666,13 +683,14 @@ export function SundialWidget({
   palette: passedPalette,
 }: WidgetSkinProps & SundialExtras) {
   const { coordsReady } = useSolarTheme();
-  const [stored, setStored] = useState(true);
-  useEffect(() => {
+  const [stored, setStored] = useState(() => {
+    if (typeof window === 'undefined') return true;
     try {
       const raw = localStorage.getItem('sundial-widget-expanded');
-      if (raw != null) setStored(JSON.parse(raw));
+      if (raw != null) return JSON.parse(raw);
     } catch {}
-  }, []);
+    return true;
+  });
   const updateExpanded = useCallback((next: boolean) => {
     setStored(next);
     try {
@@ -699,6 +717,12 @@ export function SundialWidget({
     blend.t,
   );
   const palette = { ...internalPalette, bg: passedPalette.bg };
+  const bgOverridden =
+    passedPalette.bg[0] !== internalPalette.bg[0] ||
+    passedPalette.bg[1] !== internalPalette.bg[1] ||
+    passedPalette.bg[2] !== internalPalette.bg[2];
+  const effectivePillBg = bgOverridden ? `${passedPalette.bg[1]}f7` : palette.pillBg;
+  const effectivePillBorder = bgOverridden ? `${passedPalette.bg[0]}59` : palette.pillBorder;
   const phaseColors = derivePhaseColors(blend, 'sundial');
 
   const liveWeather = useWeatherData(latitude ?? null, longitude ?? null);
@@ -738,7 +762,10 @@ export function SundialWidget({
 
   const orbGroupRef = useRef<SVGGElement>(null);
   const gnomonRef = useRef<SVGLineElement>(null);
-  const { setTarget, resetFirst } = useSundialOrbRaf({ orbGroup: orbGroupRef, gnomon: gnomonRef });
+  const { setTarget, resetFirst } = useSundialOrbRaf({
+    orbGroup: orbGroupRef,
+    gnomon: gnomonRef,
+  });
   const prevCoords = useRef(false);
   useEffect(() => {
     if (coordsReady && !prevCoords.current) {
@@ -784,7 +811,10 @@ export function SundialWidget({
   const arcPath2 = useMemo(() => buildArcGroovePath(1.0), []);
 
   const fmtMin = (m: number) =>
-    `${String(Math.floor(m / 60) % 24).padStart(2, '0')}:${String(Math.round(m % 60)).padStart(2, '0')}`;
+    `${String(Math.floor(m / 60) % 24).padStart(2, '0')}:${String(Math.round(m % 60)).padStart(
+      2,
+      '0',
+    )}`;
   const sunriseFmt = coordsReady && solar.isReady ? fmtMin(solar.times.sunrise) : '--:--';
   const sunsetFmt = coordsReady && solar.isReady ? fmtMin(solar.times.sunset) : '--:--';
 
@@ -814,7 +844,9 @@ export function SundialWidget({
             <motion.div
               className="absolute inset-0 pointer-events-none"
               style={{ borderRadius: '1.6rem' }}
-              animate={{ boxShadow: `0 0 60px 18px ${palette.outerGlow}` }}
+              animate={{
+                boxShadow: `0 0 60px 18px ${palette.outerGlow}`,
+              }}
               transition={{ duration: 1.8 }}
             />
 
@@ -843,9 +875,14 @@ export function SundialWidget({
                   className="absolute inset-0"
                   style={{ zIndex: 0 }}
                   animate={{
-                    background: `linear-gradient(145deg,${palette.bg[0]} 0%,${palette.bg[1]} 55%,${palette.bg[2]} 100%)`,
+                    background: `linear-gradient(145deg,${palette.bg[0]} 0%,${palette.bg[1]} 55%,${
+                      palette.bg[2]
+                    } 100%)`,
                   }}
-                  transition={{ duration: 1.8, ease: 'easeInOut' }}
+                  transition={{
+                    duration: 1.8,
+                    ease: 'easeInOut',
+                  }}
                 />
 
                 {/* z=1 Stone luster */}
@@ -855,12 +892,21 @@ export function SundialWidget({
                   animate={{
                     background: `radial-gradient(ellipse 55% 50% at 30% 28%, ${palette.luster} 0%, transparent 70%)`,
                   }}
-                  transition={{ duration: 1.8, ease: 'easeInOut' }}
+                  transition={{
+                    duration: 1.8,
+                    ease: 'easeInOut',
+                  }}
                 />
 
                 {/* z=2 Fixed stars */}
                 {palette.starOpacity > 0 && (
-                  <div className="absolute inset-0" style={{ zIndex: 2, pointerEvents: 'none' }}>
+                  <div
+                    className="absolute inset-0"
+                    style={{
+                      zIndex: 2,
+                      pointerEvents: 'none',
+                    }}
+                  >
                     {Array.from({ length: 10 }, (_, i) => (
                       <div
                         // biome-ignore lint/suspicious/noArrayIndexKey: fixed-length decorative array, order is stable
@@ -976,12 +1022,17 @@ export function SundialWidget({
                     strokeWidth={1.0}
                     strokeDasharray="1.5 2.5"
                     opacity={showGnomon ? 0.42 : 0}
-                    style={{ transition: 'opacity 0.8s ease-in-out' }}
+                    style={{
+                      transition: 'opacity 0.8s ease-in-out',
+                    }}
                   />
                   <g
                     ref={orbGroupRef}
                     transform={`translate(${initPos.x.toFixed(1)},${initPos.y.toFixed(1)})`}
-                    style={{ opacity: orbDimOpacity, transition: 'opacity 0.9s ease-in-out' }}
+                    style={{
+                      opacity: orbDimOpacity,
+                      transition: 'opacity 0.9s ease-in-out',
+                    }}
                   >
                     <circle
                       cx={0}
@@ -1024,8 +1075,12 @@ export function SundialWidget({
                           letterSpacing: '0.12em',
                           lineHeight: 1,
                         }}
-                        animate={{ color: palette.textPrimary }}
-                        transition={{ duration: 1.8 }}
+                        animate={{
+                          color: palette.textPrimary,
+                        }}
+                        transition={{
+                          duration: 1.8,
+                        }}
                       >
                         {palette.label}
                       </motion.p>
@@ -1038,8 +1093,12 @@ export function SundialWidget({
                           letterSpacing: '0.08em',
                           opacity: 0.68,
                         }}
-                        animate={{ color: palette.textSecondary }}
-                        transition={{ duration: 1.8 }}
+                        animate={{
+                          color: palette.textSecondary,
+                        }}
+                        transition={{
+                          duration: 1.8,
+                        }}
                       >
                         {expandedSublabel}
                       </motion.p>
@@ -1054,7 +1113,9 @@ export function SundialWidget({
                         opacity: hasTempData ? 1 : 0,
                         transition: 'opacity 0.8s ease-in-out',
                       }}
-                      animate={{ color: palette.textPrimary }}
+                      animate={{
+                        color: palette.textPrimary,
+                      }}
                       transition={{ duration: 1.8 }}
                     >
                       {dispTempStr}
@@ -1066,7 +1127,9 @@ export function SundialWidget({
                 <motion.div
                   className="absolute bottom-0 left-0 right-0 px-5 pb-[14px] flex items-center justify-between"
                   style={{ zIndex: 6 }}
-                  animate={{ color: palette.textSecondary }}
+                  animate={{
+                    color: palette.textSecondary,
+                  }}
                   transition={{ duration: 1.8 }}
                 >
                   <span
@@ -1083,7 +1146,10 @@ export function SundialWidget({
                   {flagActive && (
                     <motion.span
                       initial={{ opacity: 0, y: 3 }}
-                      animate={{ opacity: 0.55, y: 0 }}
+                      animate={{
+                        opacity: 0.55,
+                        y: 0,
+                      }}
                       transition={{ duration: 0.5 }}
                       style={{
                         fontFamily: SERIF,
@@ -1131,10 +1197,22 @@ export function SundialWidget({
                     return (
                       <motion.button
                         onClick={() => setIsExpanded(false)}
-                        initial={{ opacity: 0, scale: 0.6 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.6 }}
-                        transition={{ ...SPRING_CONTENT, delay: 0.18 }}
+                        initial={{
+                          opacity: 0,
+                          scale: 0.6,
+                        }}
+                        animate={{
+                          opacity: 1,
+                          scale: 1,
+                        }}
+                        exit={{
+                          opacity: 0,
+                          scale: 0.6,
+                        }}
+                        transition={{
+                          ...SPRING_CONTENT,
+                          delay: 0.18,
+                        }}
                         whileHover={{ scale: 1.08 }}
                         whileTap={{ scale: 0.92 }}
                         aria-label="Collapse sundial widget"
@@ -1185,8 +1263,8 @@ export function SundialWidget({
               paddingLeft: 10,
               paddingRight: 14,
               borderRadius: 12,
-              background: palette.pillBg,
-              border: `1px solid ${palette.pillBorder}`,
+              background: effectivePillBg,
+              border: `1px solid ${effectivePillBorder}`,
               boxShadow: `0 4px 16px rgba(0,0,0,0.22), 0 0 22px 4px ${palette.outerGlow}`,
               backdropFilter: 'blur(8px)',
               transformOrigin: origin,
@@ -1212,10 +1290,22 @@ export function SundialWidget({
                 {pillShowWeather && effectiveCat ? (
                   <motion.span
                     key={`glyph-${effectiveCat}`}
-                    initial={{ opacity: 0, scale: 0.6 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.6 }}
-                    transition={{ duration: 0.18, ease: 'easeOut' }}
+                    initial={{
+                      opacity: 0,
+                      scale: 0.6,
+                    }}
+                    animate={{
+                      opacity: 1,
+                      scale: 1,
+                    }}
+                    exit={{
+                      opacity: 0,
+                      scale: 0.6,
+                    }}
+                    transition={{
+                      duration: 0.18,
+                      ease: 'easeOut',
+                    }}
                     style={{
                       position: 'absolute',
                       display: 'flex',
@@ -1235,10 +1325,22 @@ export function SundialWidget({
                 ) : (
                   <motion.span
                     key="phase-icon"
-                    initial={{ opacity: 0, scale: 0.6 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.6 }}
-                    transition={{ duration: 0.18, ease: 'easeOut' }}
+                    initial={{
+                      opacity: 0,
+                      scale: 0.6,
+                    }}
+                    animate={{
+                      opacity: 1,
+                      scale: 1,
+                    }}
+                    exit={{
+                      opacity: 0,
+                      scale: 0.6,
+                    }}
+                    transition={{
+                      duration: 0.18,
+                      ease: 'easeOut',
+                    }}
                     style={{
                       position: 'absolute',
                       display: 'flex',
@@ -1262,8 +1364,14 @@ export function SundialWidget({
               <motion.span
                 initial={{ opacity: 0, scale: 0.55 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.4, ease: [0.34, 1.56, 0.64, 1] }}
-                style={{ display: 'flex', alignItems: 'center' }}
+                transition={{
+                  duration: 0.4,
+                  ease: [0.34, 1.56, 0.64, 1],
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
               >
                 <PillFlagBadge
                   code={countryInfo?.code}

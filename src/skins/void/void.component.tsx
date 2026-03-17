@@ -215,7 +215,9 @@ function arcOrbPos(progress: number) {
 function buildArcPath(pts = 120): string {
   return Array.from({ length: pts }, (_, i) => {
     const t = i / (pts - 1);
-    return `${i === 0 ? 'M' : 'L'}${(t * W).toFixed(1)},${(ARC_BASE_Y - ARC_H * 4 * t * (1 - t)).toFixed(1)}`;
+    return `${i === 0 ? 'M' : 'L'}${(t * W).toFixed(1)},${(
+      ARC_BASE_Y - ARC_H * 4 * t * (1 - t)
+    ).toFixed(1)}`;
   }).join(' ');
 }
 
@@ -325,7 +327,13 @@ const TRANSFORM_ORIGINS: Record<ExpandDirection, string> = {
   'bottom-left': 'bottom left',
   'bottom-center': 'bottom center',
 };
-const SIZE_SCALE: Record<string, number> = { xs: 0.55, sm: 0.7, md: 0.82, lg: 0.92, xl: 1.05 };
+const SIZE_SCALE: Record<string, number> = {
+  xs: 0.55,
+  sm: 0.7,
+  md: 0.82,
+  lg: 0.92,
+  xl: 1.05,
+};
 const PHASE_TEMP: Record<SolarPhase, number> = {
   midnight: 12,
   night: 13,
@@ -470,7 +478,12 @@ function useWeatherData(lat: number | null, lon: number | null): LiveWeather | n
   return w;
 }
 
-const SPRING_EXPAND = { type: 'spring' as const, stiffness: 520, damping: 38, mass: 0.8 };
+const SPRING_EXPAND = {
+  type: 'spring' as const,
+  stiffness: 520,
+  damping: 38,
+  mass: 0.8,
+};
 const SPRING_CONTENT = { type: 'spring' as const, stiffness: 550, damping: 42 };
 
 // ─── VoidExtras ───────────────────────────────────────────────────────────────
@@ -506,13 +519,14 @@ export function VoidWidget({
   liveTemperatureC,
 }: WidgetSkinProps & VoidExtras) {
   const { coordsReady } = useSolarTheme();
-  const [stored, setStored] = useState(true);
-  useEffect(() => {
+  const [stored, setStored] = useState(() => {
+    if (typeof window === 'undefined') return true;
     try {
       const raw = localStorage.getItem('void-widget-expanded');
-      if (raw != null) setStored(JSON.parse(raw));
+      if (raw != null) return JSON.parse(raw);
     } catch {}
-  }, []);
+    return true;
+  });
   const updateExpanded = useCallback((next: boolean) => {
     setStored(next);
     try {
@@ -539,6 +553,10 @@ export function VoidWidget({
     blend.t,
   );
   const palette = { ...internalPalette, bg: passedPalette.bg };
+  const bgOverridden =
+    passedPalette.bg[0] !== internalPalette.bg[0] || passedPalette.bg[1] !== internalPalette.bg[1];
+  const effectivePillBg = bgOverridden ? `${passedPalette.bg[1]}f7` : palette.pillBg;
+  const effectivePillBorder = bgOverridden ? `${passedPalette.bg[0]}59` : palette.pillBorder;
   const phaseColors = derivePhaseColors(blend, 'void');
 
   const liveWeather = useWeatherData(latitude ?? null, longitude ?? null);
@@ -573,7 +591,10 @@ export function VoidWidget({
 
   const glowRef = useRef<SVGCircleElement>(null);
   const coreRef = useRef<SVGCircleElement>(null);
-  const { setTarget, resetFirst } = useVoidOrbRaf({ glow: glowRef, core: coreRef });
+  const { setTarget, resetFirst } = useVoidOrbRaf({
+    glow: glowRef,
+    core: coreRef,
+  });
   const prevCoords = useRef(false);
   useEffect(() => {
     if (coordsReady && !prevCoords.current) {
@@ -616,7 +637,10 @@ export function VoidWidget({
   const arcPath = useMemo(() => buildArcPath(), []);
 
   const fmtMin = (m: number) =>
-    `${String(Math.floor(m / 60) % 24).padStart(2, '0')}:${String(Math.round(m % 60)).padStart(2, '0')}`;
+    `${String(Math.floor(m / 60) % 24).padStart(2, '0')}:${String(Math.round(m % 60)).padStart(
+      2,
+      '0',
+    )}`;
   const sunriseFmt = coordsReady && solar.isReady ? fmtMin(solar.times.sunrise) : '--:--';
   const sunsetFmt = coordsReady && solar.isReady ? fmtMin(solar.times.sunset) : '--:--';
 
@@ -645,7 +669,9 @@ export function VoidWidget({
             <motion.div
               className="absolute inset-0 pointer-events-none"
               style={{ borderRadius: '1.6rem' }}
-              animate={{ boxShadow: `0 0 32px 6px ${palette.outerGlow}` }}
+              animate={{
+                boxShadow: `0 0 32px 6px ${palette.outerGlow}`,
+              }}
               transition={{ duration: 2 }}
             />
 
@@ -676,7 +702,10 @@ export function VoidWidget({
                   animate={{
                     background: `linear-gradient(135deg,${palette.bg[0]} 0%,${palette.bg[1]} 100%)`,
                   }}
-                  transition={{ duration: 2, ease: 'easeInOut' }}
+                  transition={{
+                    duration: 2,
+                    ease: 'easeInOut',
+                  }}
                 />
 
                 {/* z=1 Weather backdrop */}
@@ -688,7 +717,10 @@ export function VoidWidget({
                 <svg
                   aria-hidden="true"
                   className="absolute inset-0"
-                  style={{ zIndex: 2, pointerEvents: 'none' }}
+                  style={{
+                    zIndex: 2,
+                    pointerEvents: 'none',
+                  }}
                   width={W}
                   height={H}
                   viewBox={`0 0 ${W} ${H}`}
@@ -729,14 +761,20 @@ export function VoidWidget({
                       cx={initPos.x}
                       cy={initPos.y}
                       r={56}
-                      style={{ fill: palette.orbGlow, transition: 'fill 2s ease-in-out' }}
+                      style={{
+                        fill: palette.orbGlow,
+                        transition: 'fill 2s ease-in-out',
+                      }}
                       filter="url(#void-orb-bloom)"
                     />
                     <circle
                       cx={initPos.x}
                       cy={initPos.y}
                       r={26}
-                      style={{ fill: palette.orbGlow, transition: 'fill 2s ease-in-out' }}
+                      style={{
+                        fill: palette.orbGlow,
+                        transition: 'fill 2s ease-in-out',
+                      }}
                       filter="url(#void-orb-mid)"
                       opacity={0.75}
                     />
@@ -745,7 +783,10 @@ export function VoidWidget({
                       cx={initPos.x}
                       cy={initPos.y}
                       r={7}
-                      style={{ fill: palette.orbCore, transition: 'fill 2s ease-in-out' }}
+                      style={{
+                        fill: palette.orbCore,
+                        transition: 'fill 2s ease-in-out',
+                      }}
                     />
                   </g>
                 </svg>
@@ -774,14 +815,25 @@ export function VoidWidget({
                           lineHeight: 1,
                           opacity: 0.38,
                         }}
-                        animate={{ color: palette.textPrimary }}
+                        animate={{
+                          color: palette.textPrimary,
+                        }}
                         transition={{ duration: 2 }}
                       >
                         {palette.label}
                       </motion.p>
-                      <div style={{ marginTop: 5, opacity: 0.22 }}>
+                      <div
+                        style={{
+                          marginTop: 5,
+                          opacity: 0.22,
+                        }}
+                      >
                         <span
-                          style={{ fontFamily: SANS, fontSize: 12, color: palette.textSecondary }}
+                          style={{
+                            fontFamily: SANS,
+                            fontSize: 12,
+                            color: palette.textSecondary,
+                          }}
                         >
                           ·
                         </span>
@@ -796,7 +848,9 @@ export function VoidWidget({
                         opacity: hasTempData ? 0.38 : 0,
                         transition: 'opacity 0.8s ease-in-out',
                       }}
-                      animate={{ color: palette.textPrimary }}
+                      animate={{
+                        color: palette.textPrimary,
+                      }}
                       transition={{ duration: 2 }}
                     >
                       {dispTempStr}
@@ -812,10 +866,18 @@ export function VoidWidget({
                     opacity: coordsReady && solar.isReady ? 0.28 : 0,
                     transition: 'opacity 0.8s ease-in-out',
                   }}
-                  animate={{ color: palette.textSecondary }}
+                  animate={{
+                    color: palette.textSecondary,
+                  }}
                   transition={{ duration: 2 }}
                 >
-                  <span style={{ fontFamily: SANS, fontSize: 9, letterSpacing: '0.14em' }}>
+                  <span
+                    style={{
+                      fontFamily: SANS,
+                      fontSize: 9,
+                      letterSpacing: '0.14em',
+                    }}
+                  >
                     {sunriseFmt}
                   </span>
                   {flagActive && countryInfo?.name && (
@@ -830,7 +892,13 @@ export function VoidWidget({
                       {countryInfo.name}
                     </span>
                   )}
-                  <span style={{ fontFamily: SANS, fontSize: 9, letterSpacing: '0.14em' }}>
+                  <span
+                    style={{
+                      fontFamily: SANS,
+                      fontSize: 9,
+                      letterSpacing: '0.14em',
+                    }}
+                  >
                     {sunsetFmt}
                   </span>
                 </motion.div>
@@ -843,10 +911,22 @@ export function VoidWidget({
                     return (
                       <motion.button
                         onClick={() => setIsExpanded(false)}
-                        initial={{ opacity: 0, scale: 0.6 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.6 }}
-                        transition={{ ...SPRING_CONTENT, delay: 0.18 }}
+                        initial={{
+                          opacity: 0,
+                          scale: 0.6,
+                        }}
+                        animate={{
+                          opacity: 1,
+                          scale: 1,
+                        }}
+                        exit={{
+                          opacity: 0,
+                          scale: 0.6,
+                        }}
+                        transition={{
+                          ...SPRING_CONTENT,
+                          delay: 0.18,
+                        }}
                         whileHover={{ scale: 1.08 }}
                         whileTap={{ scale: 0.92 }}
                         aria-label="Collapse void widget"
@@ -898,8 +978,8 @@ export function VoidWidget({
               paddingLeft: 12,
               paddingRight: 14,
               borderRadius: 18,
-              background: palette.pillBg,
-              border: `1px solid ${palette.pillBorder}`,
+              background: effectivePillBg,
+              border: `1px solid ${effectivePillBorder}`,
               boxShadow: `0 4px 20px rgba(0,0,0,0.60),0 0 12px 2px ${palette.outerGlow}`,
               backdropFilter: 'blur(8px)',
               transformOrigin: origin,
@@ -925,10 +1005,22 @@ export function VoidWidget({
                 {pillShowWeather && effectiveCat ? (
                   <motion.span
                     key={`glyph-${effectiveCat}`}
-                    initial={{ opacity: 0, scale: 0.6 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.6 }}
-                    transition={{ duration: 0.18, ease: 'easeOut' }}
+                    initial={{
+                      opacity: 0,
+                      scale: 0.6,
+                    }}
+                    animate={{
+                      opacity: 1,
+                      scale: 1,
+                    }}
+                    exit={{
+                      opacity: 0,
+                      scale: 0.6,
+                    }}
+                    transition={{
+                      duration: 0.18,
+                      ease: 'easeOut',
+                    }}
                     style={{
                       position: 'absolute',
                       display: 'flex',
@@ -948,10 +1040,22 @@ export function VoidWidget({
                 ) : (
                   <motion.span
                     key="phase-icon"
-                    initial={{ opacity: 0, scale: 0.6 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.6 }}
-                    transition={{ duration: 0.18, ease: 'easeOut' }}
+                    initial={{
+                      opacity: 0,
+                      scale: 0.6,
+                    }}
+                    animate={{
+                      opacity: 1,
+                      scale: 1,
+                    }}
+                    exit={{
+                      opacity: 0,
+                      scale: 0.6,
+                    }}
+                    transition={{
+                      duration: 0.18,
+                      ease: 'easeOut',
+                    }}
                     style={{
                       position: 'absolute',
                       display: 'flex',

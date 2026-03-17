@@ -518,13 +518,14 @@ export function ParchmentWidget({
 }: WidgetSkinProps & ParchmentExtras) {
   const { coordsReady } = useSolarTheme();
 
-  const [storedExpanded, setStoredExpanded] = useState(true);
-  useEffect(() => {
+  const [storedExpanded, setStoredExpanded] = useState(() => {
+    if (typeof window === 'undefined') return true;
     try {
       const raw = localStorage.getItem('solar-widget-parchment-expanded');
-      if (raw != null) setStoredExpanded(JSON.parse(raw));
+      if (raw != null) return JSON.parse(raw);
     } catch {}
-  }, []);
+    return true;
+  });
   const updateExpanded = useCallback((next: boolean) => {
     setStoredExpanded(next);
     try {

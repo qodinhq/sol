@@ -368,7 +368,9 @@ function waveOrbPos(progress: number, amp: number) {
 function buildWavePath(amp: number, pts = 120): string {
   return Array.from({ length: pts }, (_, i) => {
     const t = i / (pts - 1);
-    return `${i === 0 ? 'M' : 'L'}${(t * W).toFixed(1)},${(WAVE_Y + amp * Math.sin(t * Math.PI * 2 * WAVE_CYC)).toFixed(1)}`;
+    return `${i === 0 ? 'M' : 'L'}${(t * W).toFixed(1)},${(
+      WAVE_Y + amp * Math.sin(t * Math.PI * 2 * WAVE_CYC)
+    ).toFixed(1)}`;
   }).join(' ');
 }
 
@@ -500,7 +502,11 @@ function WaveIcon({ color, size = 16 }: { color: string; size?: number }) {
         strokeLinecap="round"
         fill="none"
         animate={{ x: [-2, 0, -2] }}
-        transition={{ duration: 2.5, repeat: Number.POSITIVE_INFINITY, ease: 'easeInOut' }}
+        transition={{
+          duration: 2.5,
+          repeat: Number.POSITIVE_INFINITY,
+          ease: 'easeInOut',
+        }}
       />
       <motion.path
         d="M0 11 Q2 9 4 11 Q6 13 8 11 Q10 9 12 11 Q14 13 16 11"
@@ -534,7 +540,13 @@ const TRANSFORM_ORIGINS: Record<ExpandDirection, string> = {
   'bottom-left': 'bottom left',
   'bottom-center': 'bottom center',
 };
-const SIZE_SCALE: Record<string, number> = { xs: 0.55, sm: 0.7, md: 0.82, lg: 0.92, xl: 1.05 };
+const SIZE_SCALE: Record<string, number> = {
+  xs: 0.55,
+  sm: 0.7,
+  md: 0.82,
+  lg: 0.92,
+  xl: 1.05,
+};
 const PHASE_TEMP: Record<SolarPhase, number> = {
   midnight: 12,
   night: 13,
@@ -677,7 +689,12 @@ function useWeatherData(lat: number | null, lon: number | null): LiveWeather | n
   return w;
 }
 
-const SPRING_EXPAND = { type: 'spring' as const, stiffness: 520, damping: 38, mass: 0.8 };
+const SPRING_EXPAND = {
+  type: 'spring' as const,
+  stiffness: 520,
+  damping: 38,
+  mass: 0.8,
+};
 const SPRING_CONTENT = { type: 'spring' as const, stiffness: 550, damping: 42 };
 
 // ─── TideExtras ───────────────────────────────────────────────────────────────
@@ -713,13 +730,14 @@ export function TideWidget({
   palette: passedPalette,
 }: WidgetSkinProps & TideExtras) {
   const { coordsReady } = useSolarTheme();
-  const [stored, setStored] = useState(true);
-  useEffect(() => {
+  const [stored, setStored] = useState(() => {
+    if (typeof window === 'undefined') return true;
     try {
       const raw = localStorage.getItem('tide-widget-expanded');
-      if (raw != null) setStored(JSON.parse(raw));
+      if (raw != null) return JSON.parse(raw);
     } catch {}
-  }, []);
+    return true;
+  });
   const updateExpanded = useCallback((next: boolean) => {
     setStored(next);
     try {
@@ -746,6 +764,12 @@ export function TideWidget({
     blend.t,
   );
   const palette = { ...internalPalette, bg: passedPalette.bg };
+  const bgOverridden =
+    passedPalette.bg[0] !== internalPalette.bg[0] ||
+    passedPalette.bg[1] !== internalPalette.bg[1] ||
+    passedPalette.bg[2] !== internalPalette.bg[2];
+  const effectivePillBg = bgOverridden ? `${passedPalette.bg[1]}f7` : palette.pillBg;
+  const effectivePillBorder = bgOverridden ? `${passedPalette.bg[0]}59` : palette.pillBorder;
   const phaseColors = derivePhaseColors(blend, 'tide');
 
   const liveWeather = useWeatherData(latitude ?? null, longitude ?? null);
@@ -871,7 +895,10 @@ export function TideWidget({
   const waterFill = useMemo(() => buildWaterFill(waveAmp), [waveAmp]);
 
   const fmtMin = (m: number) =>
-    `${String(Math.floor(m / 60) % 24).padStart(2, '0')}:${String(Math.round(m % 60)).padStart(2, '0')}`;
+    `${String(Math.floor(m / 60) % 24).padStart(2, '0')}:${String(Math.round(m % 60)).padStart(
+      2,
+      '0',
+    )}`;
   const sunriseFmt = coordsReady && solar.isReady ? fmtMin(solar.times.sunrise) : '--:--';
   const sunsetFmt = coordsReady && solar.isReady ? fmtMin(solar.times.sunset) : '--:--';
 
@@ -900,7 +927,9 @@ export function TideWidget({
             <motion.div
               className="absolute inset-0 pointer-events-none"
               style={{ borderRadius: '1.6rem' }}
-              animate={{ boxShadow: `0 0 50px 14px ${palette.outerGlow}` }}
+              animate={{
+                boxShadow: `0 0 50px 14px ${palette.outerGlow}`,
+              }}
               transition={{ duration: 1.2 }}
             />
 
@@ -929,9 +958,14 @@ export function TideWidget({
                   className="absolute inset-0"
                   style={{ zIndex: 0 }}
                   animate={{
-                    background: `linear-gradient(175deg,${palette.bg[0]} 0%,${palette.bg[1]} 58%,${palette.bg[2]} 100%)`,
+                    background: `linear-gradient(175deg,${palette.bg[0]} 0%,${palette.bg[1]} 58%,${
+                      palette.bg[2]
+                    } 100%)`,
                   }}
-                  transition={{ duration: 1.2, ease: 'easeInOut' }}
+                  transition={{
+                    duration: 1.2,
+                    ease: 'easeInOut',
+                  }}
                 />
 
                 {/* z=1 Bioluminescent sparkles */}
@@ -984,7 +1018,9 @@ export function TideWidget({
                         inset: 0,
                         background: `linear-gradient(to right, transparent 0%, ${palette.shimmerColor} 25%, transparent 50%, ${palette.shimmerColor} 75%, transparent 100%)`,
                       }}
-                      animate={{ x: ['0%', '40%', '0%'] }}
+                      animate={{
+                        x: ['0%', '40%', '0%'],
+                      }}
                       transition={{
                         duration: 3.5,
                         repeat: Number.POSITIVE_INFINITY,
@@ -1078,7 +1114,10 @@ export function TideWidget({
                     cy={initPos.y - 3}
                     r={2.5}
                     fill="rgba(255,255,255,0.48)"
-                    style={{ transition: 'opacity 0.15s ease-in-out', opacity: orbDimOpacity }}
+                    style={{
+                      transition: 'opacity 0.15s ease-in-out',
+                      opacity: orbDimOpacity,
+                    }}
                   />
                 </svg>
 
@@ -1105,8 +1144,12 @@ export function TideWidget({
                           textTransform: 'uppercase',
                           lineHeight: 1,
                         }}
-                        animate={{ color: palette.textPrimary }}
-                        transition={{ duration: 1.2 }}
+                        animate={{
+                          color: palette.textPrimary,
+                        }}
+                        transition={{
+                          duration: 1.2,
+                        }}
                       >
                         {palette.label}
                       </motion.p>
@@ -1118,8 +1161,12 @@ export function TideWidget({
                           letterSpacing: '0.10em',
                           textTransform: 'uppercase',
                         }}
-                        animate={{ color: palette.textSecondary }}
-                        transition={{ duration: 1.2 }}
+                        animate={{
+                          color: palette.textSecondary,
+                        }}
+                        transition={{
+                          duration: 1.2,
+                        }}
                       >
                         {expandedSublabel}
                       </motion.p>
@@ -1133,7 +1180,9 @@ export function TideWidget({
                         opacity: hasTempData ? 1 : 0,
                         transition: 'opacity 0.8s ease-in-out',
                       }}
-                      animate={{ color: palette.textPrimary }}
+                      animate={{
+                        color: palette.textPrimary,
+                      }}
                       transition={{ duration: 1.2 }}
                     >
                       {dispTempStr}
@@ -1145,7 +1194,9 @@ export function TideWidget({
                 <motion.div
                   className="absolute bottom-0 left-0 right-0 px-5 pb-[14px] flex items-center justify-between"
                   style={{ zIndex: 5 }}
-                  animate={{ color: palette.textSecondary }}
+                  animate={{
+                    color: palette.textSecondary,
+                  }}
                   transition={{ duration: 1.2 }}
                 >
                   <span
@@ -1228,10 +1279,22 @@ export function TideWidget({
                     return (
                       <motion.button
                         onClick={() => setIsExpanded(false)}
-                        initial={{ opacity: 0, scale: 0.6 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.6 }}
-                        transition={{ ...SPRING_CONTENT, delay: 0.18 }}
+                        initial={{
+                          opacity: 0,
+                          scale: 0.6,
+                        }}
+                        animate={{
+                          opacity: 1,
+                          scale: 1,
+                        }}
+                        exit={{
+                          opacity: 0,
+                          scale: 0.6,
+                        }}
+                        transition={{
+                          ...SPRING_CONTENT,
+                          delay: 0.18,
+                        }}
                         whileHover={{ scale: 1.08 }}
                         whileTap={{ scale: 0.92 }}
                         aria-label="Collapse tide widget"
@@ -1282,8 +1345,8 @@ export function TideWidget({
               paddingLeft: 10,
               paddingRight: 14,
               borderRadius: 18,
-              background: palette.pillBg,
-              border: `1.5px solid ${palette.pillBorder}`,
+              background: effectivePillBg,
+              border: `1.5px solid ${effectivePillBorder}`,
               boxShadow: `0 4px 20px rgba(0,0,0,0.28),0 0 18px 3px ${palette.outerGlow}`,
               backdropFilter: 'blur(12px)',
               transformOrigin: origin,
@@ -1308,10 +1371,22 @@ export function TideWidget({
                 {pillShowWeather && effectiveCat ? (
                   <motion.span
                     key={`glyph-${effectiveCat}`}
-                    initial={{ opacity: 0, scale: 0.6 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.6 }}
-                    transition={{ duration: 0.18, ease: 'easeOut' }}
+                    initial={{
+                      opacity: 0,
+                      scale: 0.6,
+                    }}
+                    animate={{
+                      opacity: 1,
+                      scale: 1,
+                    }}
+                    exit={{
+                      opacity: 0,
+                      scale: 0.6,
+                    }}
+                    transition={{
+                      duration: 0.18,
+                      ease: 'easeOut',
+                    }}
                     style={{
                       position: 'absolute',
                       display: 'flex',
@@ -1331,10 +1406,22 @@ export function TideWidget({
                 ) : (
                   <motion.span
                     key="phase-icon"
-                    initial={{ opacity: 0, scale: 0.6 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.6 }}
-                    transition={{ duration: 0.18, ease: 'easeOut' }}
+                    initial={{
+                      opacity: 0,
+                      scale: 0.6,
+                    }}
+                    animate={{
+                      opacity: 1,
+                      scale: 1,
+                    }}
+                    exit={{
+                      opacity: 0,
+                      scale: 0.6,
+                    }}
+                    transition={{
+                      duration: 0.18,
+                      ease: 'easeOut',
+                    }}
                     style={{
                       position: 'absolute',
                       display: 'flex',
@@ -1360,8 +1447,14 @@ export function TideWidget({
               <motion.span
                 initial={{ opacity: 0, scale: 0.55 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.4, ease: [0.34, 1.56, 0.64, 1] }}
-                style={{ display: 'flex', alignItems: 'center' }}
+                transition={{
+                  duration: 0.4,
+                  ease: [0.34, 1.56, 0.64, 1],
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
               >
                 <PillFlagBadge
                   code={countryInfo?.code}
@@ -1376,7 +1469,12 @@ export function TideWidget({
             )}
 
             <motion.span
-              style={{ fontFamily: SANS, fontSize: 13, fontWeight: 300, letterSpacing: '-0.01em' }}
+              style={{
+                fontFamily: SANS,
+                fontSize: 13,
+                fontWeight: 300,
+                letterSpacing: '-0.01em',
+              }}
               animate={{ color: palette.pillText }}
               transition={{ duration: 2 }}
             >

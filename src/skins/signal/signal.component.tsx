@@ -218,7 +218,9 @@ function useReticleRaf(refs: ReticleRefs) {
   const firstCall = useRef(true);
 
   const setPos = (x: number, y: number) => {
-    if (refs.group.current) refs.group.current.setAttribute('transform', `translate(${x},${y})`);
+    if (refs.group.current) {
+      refs.group.current.setAttribute('transform', `translate(${x},${y})`);
+    }
   };
 
   const anim = () => {
@@ -463,7 +465,13 @@ const SLIDE_CONTENT = { duration: 0.15, ease: 'easeOut' as const };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const SIZE_SCALE: Record<string, number> = { xs: 0.55, sm: 0.7, md: 0.82, lg: 0.92, xl: 1.05 };
+const SIZE_SCALE: Record<string, number> = {
+  xs: 0.55,
+  sm: 0.7,
+  md: 0.82,
+  lg: 0.92,
+  xl: 1.05,
+};
 const PHASE_IS_DAYTIME: Record<SolarPhase, boolean> = {
   midnight: false,
   night: false,
@@ -507,7 +515,9 @@ function getYNudge(dir: ExpandDirection): number {
   return -12;
 }
 function collapseButtonSide(dir: ExpandDirection): 'right' | 'left' {
-  if (dir === 'top-left' || dir === 'bottom-left' || dir === 'center-left') return 'left';
+  if (dir === 'top-left' || dir === 'bottom-left' || dir === 'center-left') {
+    return 'left';
+  }
   return 'right';
 }
 
@@ -554,13 +564,14 @@ export function SignalWidget({
   palette: passedPalette,
 }: WidgetSkinProps & SignalExtras) {
   const { coordsReady } = useSolarTheme();
-  const [storedExpanded, setStoredExpanded] = useState(true);
-  useEffect(() => {
+  const [storedExpanded, setStoredExpanded] = useState(() => {
+    if (typeof window === 'undefined') return true;
     try {
       const raw = localStorage.getItem('signal-widget-expanded');
-      if (raw != null) setStoredExpanded(JSON.parse(raw));
+      if (raw != null) return JSON.parse(raw);
     } catch {}
-  }, []);
+    return true;
+  });
   const updateExpanded = useCallback((next: boolean) => {
     setStoredExpanded(next);
     try {
@@ -589,6 +600,12 @@ export function SignalWidget({
     blend.t,
   );
   const palette = { ...internalPalette, bg: passedPalette.bg };
+  const bgOverridden =
+    passedPalette.bg[0] !== internalPalette.bg[0] ||
+    passedPalette.bg[1] !== internalPalette.bg[1] ||
+    passedPalette.bg[2] !== internalPalette.bg[2];
+  const effectivePillBg = bgOverridden ? `${passedPalette.bg[1]}f7` : palette.pillBg;
+  const effectivePillBorder = bgOverridden ? `${passedPalette.bg[0]}59` : palette.pillBorder;
   const phaseColors = derivePhaseColors(blend, 'signal');
 
   // Country code — two-letter ISO code rendered as terminal text field
@@ -597,7 +614,10 @@ export function SignalWidget({
 
   const reticleGroupRef = useRef<SVGGElement>(null);
   const arcRef = useRef<SVGPathElement>(null);
-  const { setTarget, resetFirstCall } = useReticleRaf({ group: reticleGroupRef, arcPath: arcRef });
+  const { setTarget, resetFirstCall } = useReticleRaf({
+    group: reticleGroupRef,
+    arcPath: arcRef,
+  });
 
   const prevCoordsReady = useRef(false);
   useEffect(() => {
@@ -682,7 +702,11 @@ export function SignalWidget({
         {isExpanded ? (
           <motion.div
             key="expanded"
-            initial={{ opacity: 0, scale: 0.86, y: yNudge * 0.5 }}
+            initial={{
+              opacity: 0,
+              scale: 0.86,
+              y: yNudge * 0.5,
+            }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.86, y: yNudge * 0.3 }}
             transition={SLIDE_EXPAND}
@@ -717,7 +741,11 @@ export function SignalWidget({
                 {/* Scanlines */}
                 <div
                   className="absolute inset-0 pointer-events-none"
-                  style={{ ...SCANLINES_STYLE, zIndex: 8, borderRadius: 6 }}
+                  style={{
+                    ...SCANLINES_STYLE,
+                    zIndex: 8,
+                    borderRadius: 6,
+                  }}
                 />
 
                 {showWeather && effectiveWeatherCategory && (
@@ -773,7 +801,13 @@ export function SignalWidget({
                 {/* Header */}
                 <div className="absolute top-0 left-0 right-0 px-5 pt-4" style={{ zIndex: 5 }}>
                   <div className="flex justify-between items-start">
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 3,
+                      }}
+                    >
                       <motion.p
                         style={{
                           fontFamily: MONO,
@@ -783,8 +817,12 @@ export function SignalWidget({
                           textTransform: 'uppercase',
                           lineHeight: 1,
                         }}
-                        animate={{ color: palette.accent }}
-                        transition={{ duration: 0.6 }}
+                        animate={{
+                          color: palette.accent,
+                        }}
+                        transition={{
+                          duration: 0.6,
+                        }}
                       >
                         {palette.phaseCode}
                       </motion.p>
@@ -797,8 +835,12 @@ export function SignalWidget({
                             letterSpacing: '0.16em',
                             textTransform: 'uppercase',
                           }}
-                          animate={{ color: palette.textMuted }}
-                          transition={{ duration: 0.6 }}
+                          animate={{
+                            color: palette.textMuted,
+                          }}
+                          transition={{
+                            duration: 0.6,
+                          }}
                         >
                           WX: {wxCode}
                         </motion.p>
@@ -816,8 +858,12 @@ export function SignalWidget({
                             letterSpacing: '0.16em',
                             textTransform: 'uppercase',
                           }}
-                          animate={{ color: palette.textMuted }}
-                          transition={{ duration: 0.6 }}
+                          animate={{
+                            color: palette.textMuted,
+                          }}
+                          transition={{
+                            duration: 0.6,
+                          }}
                         >
                           LOC: {countryCode}
                         </motion.p>
@@ -833,7 +879,9 @@ export function SignalWidget({
                         opacity: hasTempData ? 1 : 0,
                         transition: 'opacity 0.5s linear',
                       }}
-                      animate={{ color: palette.accent }}
+                      animate={{
+                        color: palette.accent,
+                      }}
                       transition={{ duration: 0.6 }}
                     >
                       {displayTempStr}
@@ -856,13 +904,17 @@ export function SignalWidget({
                       opacity: coordsReady && solar.isReady ? 1 : 0,
                       transition: 'opacity 0.5s linear',
                     }}
-                    animate={{ color: palette.textMuted }}
+                    animate={{
+                      color: palette.textMuted,
+                    }}
                     transition={{ duration: 0.6 }}
                   >
                     SR: {sunriseFmt}
                   </motion.span>
                   <motion.span
-                    animate={{ borderColor: palette.accentDim }}
+                    animate={{
+                      borderColor: palette.accentDim,
+                    }}
                     transition={{ duration: 0.6 }}
                     style={{
                       display: 'block',
@@ -883,7 +935,9 @@ export function SignalWidget({
                       opacity: coordsReady && solar.isReady ? 1 : 0,
                       transition: 'opacity 0.5s linear',
                     }}
-                    animate={{ color: palette.textMuted }}
+                    animate={{
+                      color: palette.textMuted,
+                    }}
                     transition={{ duration: 0.6 }}
                   >
                     SS: {sunsetFmt}
@@ -948,8 +1002,8 @@ export function SignalWidget({
               paddingLeft: 10,
               paddingRight: 14,
               borderRadius: 6,
-              background: palette.pillBg,
-              border: `1.5px solid ${hovered ? palette.accent : palette.pillBorder}`,
+              background: effectivePillBg,
+              border: `1.5px solid ${hovered ? palette.accent : effectivePillBorder}`,
               boxShadow: hovered ? `0 0 12px 2px ${palette.accentDim}` : 'none',
               transition: 'border-color 0.15s, box-shadow 0.15s',
               transformOrigin: origin,
@@ -973,10 +1027,22 @@ export function SignalWidget({
                 {pillShowWeather && effectiveWeatherCategory ? (
                   <motion.span
                     key={`glyph-${effectiveWeatherCategory}`}
-                    initial={{ opacity: 0, scale: 0.5 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.5 }}
-                    transition={{ duration: 0.18, ease: 'easeOut' }}
+                    initial={{
+                      opacity: 0,
+                      scale: 0.5,
+                    }}
+                    animate={{
+                      opacity: 1,
+                      scale: 1,
+                    }}
+                    exit={{
+                      opacity: 0,
+                      scale: 0.5,
+                    }}
+                    transition={{
+                      duration: 0.18,
+                      ease: 'easeOut',
+                    }}
                     style={{
                       position: 'absolute',
                       display: 'flex',
@@ -996,10 +1062,22 @@ export function SignalWidget({
                 ) : (
                   <motion.span
                     key="reticle"
-                    initial={{ opacity: 0, scale: 0.65 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.65 }}
-                    transition={{ duration: 0.18, ease: 'easeOut' }}
+                    initial={{
+                      opacity: 0,
+                      scale: 0.65,
+                    }}
+                    animate={{
+                      opacity: 1,
+                      scale: 1,
+                    }}
+                    exit={{
+                      opacity: 0,
+                      scale: 0.65,
+                    }}
+                    transition={{
+                      duration: 0.18,
+                      ease: 'easeOut',
+                    }}
                     style={{
                       position: 'absolute',
                       display: 'flex',

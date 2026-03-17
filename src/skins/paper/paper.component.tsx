@@ -514,9 +514,20 @@ function useWeatherData(lat: number | null, lon: number | null): LiveWeather | n
   return weather;
 }
 
-const SPRING_EXPAND = { type: 'spring' as const, stiffness: 420, damping: 36, mass: 0.9 };
+const SPRING_EXPAND = {
+  type: 'spring' as const,
+  stiffness: 420,
+  damping: 36,
+  mass: 0.9,
+};
 const SPRING_CONTENT = { type: 'spring' as const, stiffness: 440, damping: 40 };
-const SIZE_SCALE: Record<string, number> = { xs: 0.55, sm: 0.7, md: 0.82, lg: 0.92, xl: 1.05 };
+const SIZE_SCALE: Record<string, number> = {
+  xs: 0.55,
+  sm: 0.7,
+  md: 0.82,
+  lg: 0.92,
+  xl: 1.05,
+};
 const PHASE_IS_DAYTIME: Record<SolarPhase, boolean> = {
   midnight: false,
   night: false,
@@ -559,7 +570,9 @@ function getYNudge(dir: ExpandDirection) {
   return -12;
 }
 function collapseButtonSide(dir: ExpandDirection) {
-  if (dir === 'top-left' || dir === 'bottom-left' || dir === 'center-left') return 'left';
+  if (dir === 'top-left' || dir === 'bottom-left' || dir === 'center-left') {
+    return 'left';
+  }
   return 'right';
 }
 function collapseArrowPath(dir: ExpandDirection) {
@@ -653,13 +666,14 @@ export function PaperWidget({
   liveTemperatureC,
 }: WidgetSkinProps & PaperExtras) {
   const { coordsReady } = useSolarTheme();
-  const [storedExpanded, setStoredExpanded] = useState(true);
-  useEffect(() => {
+  const [storedExpanded, setStoredExpanded] = useState(() => {
+    if (typeof window === 'undefined') return true;
     try {
       const raw = localStorage.getItem('paper-widget-expanded');
-      if (raw != null) setStoredExpanded(JSON.parse(raw));
+      if (raw != null) return JSON.parse(raw);
     } catch {}
-  }, []);
+    return true;
+  });
   const updateExpanded = useCallback((next: boolean) => {
     setStoredExpanded(next);
     try {
@@ -689,6 +703,12 @@ export function PaperWidget({
     blend.t,
   );
   const palette = { ...internalPalette, bg: passedPalette.bg };
+  const bgOverridden =
+    passedPalette.bg[0] !== internalPalette.bg[0] ||
+    passedPalette.bg[1] !== internalPalette.bg[1] ||
+    passedPalette.bg[2] !== internalPalette.bg[2];
+  const effectivePillBg = bgOverridden ? `${passedPalette.bg[1]}f7` : palette.pillBg;
+  const effectivePillBorder = bgOverridden ? `${passedPalette.bg[0]}59` : palette.pillBorder;
   const phaseColors = derivePhaseColors(blend, 'paper');
 
   const countryInfo = useMemo(() => {
@@ -772,7 +792,9 @@ export function PaperWidget({
     : null;
   const expandedSublabel =
     showWeather && effectiveWeatherCategory
-      ? `${effectiveWeatherDescription} · ${temperatureUnit === 'F' ? `${toF(tempC)}°F` : `${tempC}°C`}`
+      ? `${effectiveWeatherDescription} · ${
+          temperatureUnit === 'F' ? `${toF(tempC)}°F` : `${tempC}°C`
+        }`
       : palette.sublabel;
 
   const pillShowWeather = showWeather && effectiveWeatherIcon !== null;
@@ -849,9 +871,14 @@ export function PaperWidget({
                   className="absolute inset-0"
                   style={{ zIndex: 0 }}
                   animate={{
-                    background: `linear-gradient(155deg,${palette.bg[0]} 0%,${palette.bg[1]} 52%,${palette.bg[2]} 100%)`,
+                    background: `linear-gradient(155deg,${palette.bg[0]} 0%,${palette.bg[1]} 52%,${
+                      palette.bg[2]
+                    } 100%)`,
                   }}
-                  transition={{ duration: 1.2, ease: 'easeInOut' }}
+                  transition={{
+                    duration: 1.2,
+                    ease: 'easeInOut',
+                  }}
                 />
 
                 <div
@@ -870,7 +897,9 @@ export function PaperWidget({
                 <motion.div
                   className="absolute inset-0 overflow-hidden"
                   style={{ zIndex: 2, borderRadius: 24 }}
-                  animate={{ opacity: isNight ? 0.55 : 0 }}
+                  animate={{
+                    opacity: isNight ? 0.55 : 0,
+                  }}
                   transition={{ duration: 1.2 }}
                 >
                   {Array.from({ length: 20 }).map((_, i) => (
@@ -944,7 +973,10 @@ export function PaperWidget({
                     cy={initPt.y}
                     r={isNight ? 22 : 28}
                     filter="url(#paper-bloom)"
-                    style={{ fill: palette.inkBloom, transition: 'fill 1.2s ease-in-out' }}
+                    style={{
+                      fill: palette.inkBloom,
+                      transition: 'fill 1.2s ease-in-out',
+                    }}
                   />
                   <circle
                     ref={centerRef}
@@ -981,7 +1013,9 @@ export function PaperWidget({
                           letterSpacing: '-0.01em',
                           lineHeight: 1,
                         }}
-                        animate={{ color: palette.textPrimary }}
+                        animate={{
+                          color: palette.textPrimary,
+                        }}
                         transition={{ duration: 1 }}
                       >
                         {palette.label}
@@ -995,7 +1029,9 @@ export function PaperWidget({
                           textTransform: 'uppercase',
                           marginTop: 4,
                         }}
-                        animate={{ color: palette.textSecondary }}
+                        animate={{
+                          color: palette.textSecondary,
+                        }}
                         transition={{ duration: 1 }}
                       >
                         {expandedSublabel}
@@ -1010,7 +1046,9 @@ export function PaperWidget({
                         opacity: hasTempData ? 1 : 0,
                         transition: 'opacity 0.8s ease-in-out',
                       }}
-                      animate={{ color: palette.textPrimary }}
+                      animate={{
+                        color: palette.textPrimary,
+                      }}
                       transition={{ duration: 1 }}
                     >
                       {displayTempStr}
@@ -1022,7 +1060,9 @@ export function PaperWidget({
                 <motion.div
                   className="absolute bottom-0 left-0 right-0 px-5 pb-[14px] flex items-center justify-between"
                   style={{ zIndex: 5 }}
-                  animate={{ color: palette.textSecondary }}
+                  animate={{
+                    color: palette.textSecondary,
+                  }}
                   transition={{ duration: 1 }}
                 >
                   <span
@@ -1050,7 +1090,10 @@ export function PaperWidget({
                     <motion.span
                       key={countryInfo?.name}
                       initial={{ opacity: 0, y: 3 }}
-                      animate={{ opacity: 0.82, y: 0 }}
+                      animate={{
+                        opacity: 0.82,
+                        y: 0,
+                      }}
                       exit={{ opacity: 0, y: 3 }}
                       transition={{ duration: 0.55 }}
                       style={{
@@ -1122,10 +1165,22 @@ export function PaperWidget({
                       <motion.button
                         onClick={() => setIsExpanded(false)}
                         className="flex items-center justify-center cursor-pointer"
-                        initial={{ opacity: 0, scale: 0.6 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.6 }}
-                        transition={{ ...SPRING_CONTENT, delay: 0.18 }}
+                        initial={{
+                          opacity: 0,
+                          scale: 0.6,
+                        }}
+                        animate={{
+                          opacity: 1,
+                          scale: 1,
+                        }}
+                        exit={{
+                          opacity: 0,
+                          scale: 0.6,
+                        }}
+                        transition={{
+                          ...SPRING_CONTENT,
+                          delay: 0.18,
+                        }}
                         whileHover={{ scale: 1.08 }}
                         whileTap={{ scale: 0.92 }}
                         aria-label="Collapse paper widget"
@@ -1171,8 +1226,8 @@ export function PaperWidget({
               paddingLeft: 10,
               paddingRight: 14,
               borderRadius: 24,
-              background: palette.pillBg,
-              border: `1px solid ${palette.pillBorder}`,
+              background: effectivePillBg,
+              border: `1px solid ${effectivePillBorder}`,
               boxShadow: `0 4px 18px rgba(0,0,0,0.18), 0 1px 4px ${palette.dropShadow}`,
               backdropFilter: 'blur(8px)',
               transformOrigin: origin,
@@ -1197,10 +1252,24 @@ export function PaperWidget({
                 {pillShowWeather && effectiveWeatherCategory ? (
                   <motion.span
                     key={`glyph-${effectiveWeatherCategory}`}
-                    initial={{ opacity: 0, scale: 0.65 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.65 }}
-                    transition={{ type: 'spring', stiffness: 420, damping: 30, mass: 0.8 }}
+                    initial={{
+                      opacity: 0,
+                      scale: 0.65,
+                    }}
+                    animate={{
+                      opacity: 1,
+                      scale: 1,
+                    }}
+                    exit={{
+                      opacity: 0,
+                      scale: 0.65,
+                    }}
+                    transition={{
+                      type: 'spring',
+                      stiffness: 420,
+                      damping: 30,
+                      mass: 0.8,
+                    }}
                     style={{
                       position: 'absolute',
                       display: 'flex',
@@ -1220,10 +1289,24 @@ export function PaperWidget({
                 ) : (
                   <motion.span
                     key="phase-icon"
-                    initial={{ opacity: 0, scale: 0.65 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.65 }}
-                    transition={{ type: 'spring', stiffness: 420, damping: 30, mass: 0.8 }}
+                    initial={{
+                      opacity: 0,
+                      scale: 0.65,
+                    }}
+                    animate={{
+                      opacity: 1,
+                      scale: 1,
+                    }}
+                    exit={{
+                      opacity: 0,
+                      scale: 0.65,
+                    }}
+                    transition={{
+                      type: 'spring',
+                      stiffness: 420,
+                      damping: 30,
+                      mass: 0.8,
+                    }}
                     style={{
                       position: 'absolute',
                       display: 'flex',
@@ -1248,8 +1331,14 @@ export function PaperWidget({
               <motion.span
                 initial={{ opacity: 0, scale: 0.55 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.4, ease: [0.34, 1.56, 0.64, 1] }}
-                style={{ display: 'flex', alignItems: 'center' }}
+                transition={{
+                  duration: 0.4,
+                  ease: [0.34, 1.56, 0.64, 1],
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
               >
                 <PillFlagBadge
                   code={countryInfo?.code}
@@ -1263,7 +1352,12 @@ export function PaperWidget({
             )}
 
             <motion.span
-              style={{ fontFamily: SERIF, fontSize: 13, fontWeight: 400, letterSpacing: '-0.01em' }}
+              style={{
+                fontFamily: SERIF,
+                fontSize: 13,
+                fontWeight: 400,
+                letterSpacing: '-0.01em',
+              }}
               animate={{ color: palette.pillText }}
               transition={{ duration: 2 }}
             >

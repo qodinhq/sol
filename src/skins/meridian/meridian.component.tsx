@@ -440,9 +440,20 @@ function useWeatherData(lat: number | null, lon: number | null): LiveWeather | n
 
 // ─── Shared helpers ───────────────────────────────────────────────────────────
 
-const SPRING_EXPAND = { type: 'spring' as const, stiffness: 540, damping: 42, mass: 0.8 };
+const SPRING_EXPAND = {
+  type: 'spring' as const,
+  stiffness: 540,
+  damping: 42,
+  mass: 0.8,
+};
 const SPRING_CONTENT = { type: 'spring' as const, stiffness: 560, damping: 44 };
-const SIZE_SCALE: Record<string, number> = { xs: 0.55, sm: 0.7, md: 0.82, lg: 0.92, xl: 1.05 };
+const SIZE_SCALE: Record<string, number> = {
+  xs: 0.55,
+  sm: 0.7,
+  md: 0.82,
+  lg: 0.92,
+  xl: 1.05,
+};
 const PHASE_IS_DAYTIME: Record<SolarPhase, boolean> = {
   midnight: false,
   night: false,
@@ -485,7 +496,9 @@ function getYNudge(dir: ExpandDirection) {
   return -12;
 }
 function collapseButtonSide(dir: ExpandDirection) {
-  if (dir === 'top-left' || dir === 'bottom-left' || dir === 'center-left') return 'left';
+  if (dir === 'top-left' || dir === 'bottom-left' || dir === 'center-left') {
+    return 'left';
+  }
   return 'right';
 }
 function pillArrowPath(dir: ExpandDirection) {
@@ -637,13 +650,14 @@ export function MeridianWidget({
   palette: passedPalette,
 }: WidgetSkinProps & MeridianExtras) {
   const { coordsReady } = useSolarTheme();
-  const [storedExpanded, setStoredExpanded] = useState(true);
-  useEffect(() => {
+  const [storedExpanded, setStoredExpanded] = useState(() => {
+    if (typeof window === 'undefined') return true;
     try {
       const raw = localStorage.getItem('meridian-widget-expanded');
-      if (raw != null) setStoredExpanded(JSON.parse(raw));
+      if (raw != null) return JSON.parse(raw);
     } catch {}
-  }, []);
+    return true;
+  });
   const updateExpanded = useCallback((next: boolean) => {
     setStoredExpanded(next);
     try {
@@ -673,6 +687,12 @@ export function MeridianWidget({
     blend.t,
   );
   const palette = { ...internalPalette, bg: passedPalette.bg };
+  const bgOverridden =
+    passedPalette.bg[0] !== internalPalette.bg[0] ||
+    passedPalette.bg[1] !== internalPalette.bg[1] ||
+    passedPalette.bg[2] !== internalPalette.bg[2];
+  const effectivePillBg = bgOverridden ? `${passedPalette.bg[1]}f7` : palette.pillBg;
+  const effectivePillBorder = bgOverridden ? `${passedPalette.bg[0]}59` : palette.pillBorder;
   const phaseColors = derivePhaseColors(blend, 'meridian');
 
   const countryInfo = useMemo(() => {
@@ -762,7 +782,9 @@ export function MeridianWidget({
     : null;
   const expandedSublabel =
     showWeather && effectiveWeatherCategory
-      ? `${effectiveWeatherDescription} · ${temperatureUnit === 'F' ? `${toF(tempC)}°F` : `${tempC}°C`}`
+      ? `${effectiveWeatherDescription} · ${
+          temperatureUnit === 'F' ? `${toF(tempC)}°F` : `${tempC}°C`
+        }`
       : palette.sublabel;
 
   const pillShowWeather =
@@ -848,7 +870,10 @@ export function MeridianWidget({
               <motion.div
                 className="relative w-full h-full rounded-2xl overflow-hidden"
                 animate={{ background: palette.surface }}
-                transition={{ duration: 1.5, ease: 'easeInOut' }}
+                transition={{
+                  duration: 1.5,
+                  ease: 'easeInOut',
+                }}
                 style={{
                   border: `1px solid rgba(0,0,0,${palette.mode === 'dark' ? '0.20' : '0.08'})`,
                 }}
@@ -893,14 +918,20 @@ export function MeridianWidget({
                     r={isNight ? 16 : 20}
                     fill="none"
                     strokeWidth="1"
-                    style={{ stroke: palette.orbRing, transition: 'stroke 1.5s ease-in-out' }}
+                    style={{
+                      stroke: palette.orbRing,
+                      transition: 'stroke 1.5s ease-in-out',
+                    }}
                   />
                   <circle
                     ref={fillRef}
                     cx={initPt.x}
                     cy={initPt.y}
                     r={isNight ? 5 : 7}
-                    style={{ fill: palette.orbFill, transition: 'fill 1.5s ease-in-out' }}
+                    style={{
+                      fill: palette.orbFill,
+                      transition: 'fill 1.5s ease-in-out',
+                    }}
                   />
                 </svg>
 
@@ -925,8 +956,12 @@ export function MeridianWidget({
                           letterSpacing: '-0.025em',
                           lineHeight: 1,
                         }}
-                        animate={{ color: palette.textPrimary }}
-                        transition={{ duration: 1.5 }}
+                        animate={{
+                          color: palette.textPrimary,
+                        }}
+                        transition={{
+                          duration: 1.5,
+                        }}
                       >
                         {palette.label}
                       </motion.p>
@@ -938,8 +973,12 @@ export function MeridianWidget({
                           letterSpacing: '0.01em',
                           marginTop: 4,
                         }}
-                        animate={{ color: palette.textSecondary }}
-                        transition={{ duration: 1.5 }}
+                        animate={{
+                          color: palette.textSecondary,
+                        }}
+                        transition={{
+                          duration: 1.5,
+                        }}
                       >
                         {expandedSublabel}
                       </motion.p>
@@ -953,7 +992,9 @@ export function MeridianWidget({
                         opacity: hasTempData ? 1 : 0,
                         transition: 'opacity 0.8s ease-in-out',
                       }}
-                      animate={{ color: palette.textPrimary }}
+                      animate={{
+                        color: palette.textPrimary,
+                      }}
                       transition={{ duration: 1.5 }}
                     >
                       {displayTempStr}
@@ -965,7 +1006,9 @@ export function MeridianWidget({
                 <motion.div
                   className="absolute bottom-0 left-0 right-0 px-5 pb-[14px] flex items-center justify-between"
                   style={{ zIndex: 5 }}
-                  animate={{ color: palette.textSecondary }}
+                  animate={{
+                    color: palette.textSecondary,
+                  }}
                   transition={{ duration: 1.5 }}
                 >
                   <span
@@ -983,10 +1026,18 @@ export function MeridianWidget({
                   {flagActive ? (
                     <motion.span
                       key={countryInfo?.name}
-                      initial={{ opacity: 0, y: 3 }}
-                      animate={{ opacity: 0.65, y: 0 }}
+                      initial={{
+                        opacity: 0,
+                        y: 3,
+                      }}
+                      animate={{
+                        opacity: 0.65,
+                        y: 0,
+                      }}
                       exit={{ opacity: 0 }}
-                      transition={{ duration: 0.5 }}
+                      transition={{
+                        duration: 0.5,
+                      }}
                       style={{
                         display: 'flex',
                         alignItems: 'center',
@@ -1022,8 +1073,13 @@ export function MeridianWidget({
                     <motion.span
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 0.75 }}
-                      transition={{ duration: 0.5 }}
-                      style={{ display: 'flex', alignItems: 'center' }}
+                      transition={{
+                        duration: 0.5,
+                      }}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                      }}
                     >
                       <WeatherIcon
                         type={effectiveWeatherIcon}
@@ -1040,7 +1096,9 @@ export function MeridianWidget({
                       animate={{
                         borderColor: `rgba(0,0,0,${palette.mode === 'dark' ? '0.15' : '0.10'})`,
                       }}
-                      transition={{ duration: 1.5 }}
+                      transition={{
+                        duration: 1.5,
+                      }}
                       style={{
                         display: 'block',
                         flex: 1,
@@ -1073,10 +1131,22 @@ export function MeridianWidget({
                       <motion.button
                         onClick={() => setIsExpanded(false)}
                         className="flex items-center justify-center cursor-pointer"
-                        initial={{ opacity: 0, scale: 0.6 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.6 }}
-                        transition={{ ...SPRING_CONTENT, delay: 0.16 }}
+                        initial={{
+                          opacity: 0,
+                          scale: 0.6,
+                        }}
+                        animate={{
+                          opacity: 1,
+                          scale: 1,
+                        }}
+                        exit={{
+                          opacity: 0,
+                          scale: 0.6,
+                        }}
+                        transition={{
+                          ...SPRING_CONTENT,
+                          delay: 0.16,
+                        }}
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.9 }}
                         aria-label="Collapse meridian widget"
@@ -1123,8 +1193,8 @@ export function MeridianWidget({
               paddingLeft: 10,
               paddingRight: 13,
               borderRadius: 17,
-              background: palette.pillBg,
-              border: `1px solid ${palette.pillBorder}`,
+              background: effectivePillBg,
+              border: `1px solid ${effectivePillBorder}`,
               boxShadow: `0 2px 12px ${palette.shadow}`,
               backdropFilter: palette.mode === 'light' ? 'blur(8px)' : 'none',
               transformOrigin: origin,
@@ -1149,10 +1219,22 @@ export function MeridianWidget({
                 {pillShowWeather && effectiveWeatherCategory ? (
                   <motion.span
                     key={`glyph-${effectiveWeatherCategory}`}
-                    initial={{ opacity: 0, scale: 0.7 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.7 }}
-                    transition={{ duration: 0.2, ease: 'easeOut' }}
+                    initial={{
+                      opacity: 0,
+                      scale: 0.7,
+                    }}
+                    animate={{
+                      opacity: 1,
+                      scale: 1,
+                    }}
+                    exit={{
+                      opacity: 0,
+                      scale: 0.7,
+                    }}
+                    transition={{
+                      duration: 0.2,
+                      ease: 'easeOut',
+                    }}
                     style={{
                       position: 'absolute',
                       display: 'flex',
@@ -1172,10 +1254,22 @@ export function MeridianWidget({
                 ) : (
                   <motion.span
                     key="phase-icon"
-                    initial={{ opacity: 0, scale: 0.7 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.7 }}
-                    transition={{ duration: 0.2, ease: 'easeOut' }}
+                    initial={{
+                      opacity: 0,
+                      scale: 0.7,
+                    }}
+                    animate={{
+                      opacity: 1,
+                      scale: 1,
+                    }}
+                    exit={{
+                      opacity: 0,
+                      scale: 0.7,
+                    }}
+                    transition={{
+                      duration: 0.2,
+                      ease: 'easeOut',
+                    }}
                     style={{
                       position: 'absolute',
                       display: 'flex',
@@ -1215,7 +1309,12 @@ export function MeridianWidget({
             />
 
             <motion.span
-              style={{ fontFamily: SANS, fontSize: 11, fontWeight: 400, letterSpacing: '0.01em' }}
+              style={{
+                fontFamily: SANS,
+                fontSize: 11,
+                fontWeight: 400,
+                letterSpacing: '0.01em',
+              }}
               animate={{ color: palette.textSecondary }}
               transition={{ duration: 1.5 }}
             >
@@ -1227,7 +1326,10 @@ export function MeridianWidget({
                 initial={{ opacity: 0, scale: 0.6 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.35 }}
-                style={{ display: 'flex', alignItems: 'center' }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
               >
                 <PillFlagBadge
                   code={countryInfo.code}

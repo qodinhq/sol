@@ -604,9 +604,20 @@ function useWeatherData(lat: number | null, lon: number | null): LiveWeather | n
 
 // ─── Misc helpers ─────────────────────────────────────────────────────────────
 
-const SPRING_EXPAND = { type: 'spring' as const, stiffness: 500, damping: 40, mass: 0.85 };
+const SPRING_EXPAND = {
+  type: 'spring' as const,
+  stiffness: 500,
+  damping: 40,
+  mass: 0.85,
+};
 const SPRING_CONTENT = { type: 'spring' as const, stiffness: 520, damping: 42 };
-const SIZE_SCALE: Record<string, number> = { xs: 0.55, sm: 0.7, md: 0.82, lg: 0.92, xl: 1.05 };
+const SIZE_SCALE: Record<string, number> = {
+  xs: 0.55,
+  sm: 0.7,
+  md: 0.82,
+  lg: 0.92,
+  xl: 1.05,
+};
 const PHASE_IS_DAYTIME: Record<SolarPhase, boolean> = {
   midnight: false,
   night: false,
@@ -649,7 +660,9 @@ function getYNudge(dir: ExpandDirection) {
   return -12;
 }
 function collapseButtonSide(dir: ExpandDirection) {
-  if (dir === 'top-left' || dir === 'bottom-left' || dir === 'center-left') return 'left';
+  if (dir === 'top-left' || dir === 'bottom-left' || dir === 'center-left') {
+    return 'left';
+  }
   return 'right';
 }
 function pillArrowPath(dir: ExpandDirection) {
@@ -772,13 +785,14 @@ export function AuroraWidget({
   palette: passedPalette,
 }: WidgetSkinProps & AuroraExtras) {
   const { coordsReady } = useSolarTheme();
-  const [storedExpanded, setStoredExpanded] = useState(true);
-  useEffect(() => {
+  const [storedExpanded, setStoredExpanded] = useState(() => {
+    if (typeof window === 'undefined') return true;
     try {
       const raw = localStorage.getItem('aurora-widget-expanded');
-      if (raw != null) setStoredExpanded(JSON.parse(raw));
+      if (raw != null) return JSON.parse(raw);
     } catch {}
-  }, []);
+    return true;
+  });
   const updateExpanded = useCallback((next: boolean) => {
     setStoredExpanded(next);
     try {
@@ -807,6 +821,12 @@ export function AuroraWidget({
     blend.t,
   );
   const palette = { ...internalPalette, bg: passedPalette.bg };
+  const bgOverridden =
+    passedPalette.bg[0] !== internalPalette.bg[0] ||
+    passedPalette.bg[1] !== internalPalette.bg[1] ||
+    passedPalette.bg[2] !== internalPalette.bg[2];
+  const effectivePillBg = bgOverridden ? `${passedPalette.bg[1]}f7` : palette.pillBg;
+  const effectivePillBorder = bgOverridden ? `${passedPalette.bg[0]}59` : palette.pillBorder;
   const phaseColors = derivePhaseColors(blend, 'aurora');
 
   const countryInfo = useMemo(() => {
@@ -905,7 +925,9 @@ export function AuroraWidget({
     : null;
   const expandedSublabel =
     showWeather && effectiveWeatherCategory
-      ? `${effectiveWeatherDescription} · ${temperatureUnit === 'F' ? `${toF(tempC)}°F` : `${tempC}°C`}`
+      ? `${effectiveWeatherDescription} · ${
+          temperatureUnit === 'F' ? `${toF(tempC)}°F` : `${tempC}°C`
+        }`
       : palette.sublabel;
 
   const pillShowWeather =
@@ -1009,9 +1031,14 @@ export function AuroraWidget({
                   className="absolute inset-0"
                   style={{ zIndex: 0 }}
                   animate={{
-                    background: `linear-gradient(175deg,${palette.bg[0]} 0%,${palette.bg[1]} 55%,${palette.bg[2]} 100%)`,
+                    background: `linear-gradient(175deg,${palette.bg[0]} 0%,${palette.bg[1]} 55%,${
+                      palette.bg[2]
+                    } 100%)`,
                   }}
-                  transition={{ duration: 1.4, ease: 'easeInOut' }}
+                  transition={{
+                    duration: 1.4,
+                    ease: 'easeInOut',
+                  }}
                 />
 
                 {/* z=1 Aurora bands */}
@@ -1071,7 +1098,10 @@ export function AuroraWidget({
                     cy={initPt.y}
                     r={28}
                     filter="url(#aurora-corona)"
-                    style={{ fill: palette.coronaOuter, transition: 'fill 1.4s ease-in-out' }}
+                    style={{
+                      fill: palette.coronaOuter,
+                      transition: 'fill 1.4s ease-in-out',
+                    }}
                   />
                   <circle
                     ref={coronaNearRef}
@@ -1079,14 +1109,20 @@ export function AuroraWidget({
                     cy={initPt.y}
                     r={16}
                     filter="url(#aurora-near)"
-                    style={{ fill: palette.coronaInner, transition: 'fill 1.4s ease-in-out' }}
+                    style={{
+                      fill: palette.coronaInner,
+                      transition: 'fill 1.4s ease-in-out',
+                    }}
                   />
                   <circle
                     ref={centerRef}
                     cx={initPt.x}
                     cy={initPt.y}
                     r={5}
-                    style={{ fill: palette.orbFill, transition: 'fill 1.4s ease-in-out' }}
+                    style={{
+                      fill: palette.orbFill,
+                      transition: 'fill 1.4s ease-in-out',
+                    }}
                   />
                 </svg>
 
@@ -1111,8 +1147,12 @@ export function AuroraWidget({
                           letterSpacing: '-0.02em',
                           lineHeight: 1,
                         }}
-                        animate={{ color: palette.textPrimary }}
-                        transition={{ duration: 1.4 }}
+                        animate={{
+                          color: palette.textPrimary,
+                        }}
+                        transition={{
+                          duration: 1.4,
+                        }}
                       >
                         {palette.label}
                       </motion.p>
@@ -1125,8 +1165,12 @@ export function AuroraWidget({
                           textTransform: 'uppercase',
                           marginTop: 4,
                         }}
-                        animate={{ color: palette.textSecondary }}
-                        transition={{ duration: 1.4 }}
+                        animate={{
+                          color: palette.textSecondary,
+                        }}
+                        transition={{
+                          duration: 1.4,
+                        }}
                       >
                         {expandedSublabel}
                       </motion.p>
@@ -1140,7 +1184,9 @@ export function AuroraWidget({
                         opacity: hasTempData ? 1 : 0,
                         transition: 'opacity 0.8s ease-in-out',
                       }}
-                      animate={{ color: palette.textPrimary }}
+                      animate={{
+                        color: palette.textPrimary,
+                      }}
                       transition={{ duration: 1.4 }}
                     >
                       {displayTempStr}
@@ -1152,7 +1198,9 @@ export function AuroraWidget({
                 <motion.div
                   className="absolute bottom-0 left-0 right-0 px-5 pb-[14px] flex items-center justify-between"
                   style={{ zIndex: 5 }}
-                  animate={{ color: palette.textSecondary }}
+                  animate={{
+                    color: palette.textSecondary,
+                  }}
                   transition={{ duration: 1.4 }}
                 >
                   <span
@@ -1173,7 +1221,10 @@ export function AuroraWidget({
                     <motion.span
                       key={countryInfo?.name}
                       initial={{ opacity: 0, y: 3 }}
-                      animate={{ opacity: 0.75, y: 0 }}
+                      animate={{
+                        opacity: 0.75,
+                        y: 0,
+                      }}
                       exit={{ opacity: 0 }}
                       transition={{ duration: 0.5 }}
                       style={{
@@ -1245,10 +1296,22 @@ export function AuroraWidget({
                       <motion.button
                         onClick={() => setIsExpanded(false)}
                         className="flex items-center justify-center cursor-pointer"
-                        initial={{ opacity: 0, scale: 0.6 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.6 }}
-                        transition={{ ...SPRING_CONTENT, delay: 0.18 }}
+                        initial={{
+                          opacity: 0,
+                          scale: 0.6,
+                        }}
+                        animate={{
+                          opacity: 1,
+                          scale: 1,
+                        }}
+                        exit={{
+                          opacity: 0,
+                          scale: 0.6,
+                        }}
+                        transition={{
+                          ...SPRING_CONTENT,
+                          delay: 0.18,
+                        }}
                         whileHover={{ scale: 1.08 }}
                         whileTap={{ scale: 0.92 }}
                         aria-label="Collapse aurora widget"
@@ -1295,8 +1358,8 @@ export function AuroraWidget({
               paddingLeft: 10,
               paddingRight: 14,
               borderRadius: 18,
-              background: palette.pillBg,
-              border: `1.5px solid ${palette.pillBorder}`,
+              background: effectivePillBg,
+              border: `1.5px solid ${effectivePillBorder}`,
               boxShadow: `0 4px 20px rgba(0,0,0,0.28), 0 0 20px 4px ${palette.outerGlow}`,
               backdropFilter: 'blur(12px)',
               transformOrigin: origin,
@@ -1321,10 +1384,22 @@ export function AuroraWidget({
                 {pillShowWeather && effectiveWeatherCategory ? (
                   <motion.span
                     key={`glyph-${effectiveWeatherCategory}`}
-                    initial={{ opacity: 0, scale: 0.7 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.7 }}
-                    transition={{ duration: 0.2, ease: 'easeOut' }}
+                    initial={{
+                      opacity: 0,
+                      scale: 0.7,
+                    }}
+                    animate={{
+                      opacity: 1,
+                      scale: 1,
+                    }}
+                    exit={{
+                      opacity: 0,
+                      scale: 0.7,
+                    }}
+                    transition={{
+                      duration: 0.2,
+                      ease: 'easeOut',
+                    }}
                     style={{
                       position: 'absolute',
                       display: 'flex',
@@ -1344,10 +1419,22 @@ export function AuroraWidget({
                 ) : (
                   <motion.span
                     key="phase-icon"
-                    initial={{ opacity: 0, scale: 0.65 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.65 }}
-                    transition={{ duration: 0.2, ease: 'easeOut' }}
+                    initial={{
+                      opacity: 0,
+                      scale: 0.65,
+                    }}
+                    animate={{
+                      opacity: 1,
+                      scale: 1,
+                    }}
+                    exit={{
+                      opacity: 0,
+                      scale: 0.65,
+                    }}
+                    transition={{
+                      duration: 0.2,
+                      ease: 'easeOut',
+                    }}
                     style={{
                       position: 'absolute',
                       display: 'flex',
@@ -1387,7 +1474,12 @@ export function AuroraWidget({
             />
 
             <motion.span
-              style={{ fontFamily: SANS, fontSize: 11, fontWeight: 400, letterSpacing: '0.01em' }}
+              style={{
+                fontFamily: SANS,
+                fontSize: 11,
+                fontWeight: 400,
+                letterSpacing: '0.01em',
+              }}
               animate={{ color: palette.textSecondary }}
               transition={{ duration: 1.4 }}
             >
@@ -1399,7 +1491,10 @@ export function AuroraWidget({
                 initial={{ opacity: 0, scale: 0.6 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.38 }}
-                style={{ display: 'flex', alignItems: 'center' }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
               >
                 <PillFlagBadge
                   code={countryInfo.code}

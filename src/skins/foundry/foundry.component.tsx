@@ -349,8 +349,12 @@ function useOrbRaf(refs: OrbRefs) {
   const setOrbOpacity = (o: number) => {
     const moon = curShowMoon.current;
     if (refs.halo.current) refs.halo.current.style.opacity = String(o);
-    if (refs.core.current) refs.core.current.style.opacity = moon ? '0' : String(o);
-    if (refs.moonG.current) refs.moonG.current.style.opacity = moon ? String(o * 0.85) : '0';
+    if (refs.core.current) {
+      refs.core.current.style.opacity = moon ? '0' : String(o);
+    }
+    if (refs.moonG.current) {
+      refs.moonG.current.style.opacity = moon ? String(o * 0.85) : '0';
+    }
   };
 
   const animOrb = () => {
@@ -423,7 +427,9 @@ function useOrbRaf(refs: OrbRefs) {
         setOrbPos(x, y);
         setOrbOpacity(1);
         orbFading.current = false;
-        if (!rafId.current) rafId.current = requestAnimationFrame(animOrb);
+        if (!rafId.current) {
+          rafId.current = requestAnimationFrame(animOrb);
+        }
         fadeTimer.current = null;
       }, 160);
     } else if (!orbFading.current) {
@@ -599,7 +605,12 @@ function useWeatherData(lat: number | null, lon: number | null): LiveWeather | n
 
 // ─── Motion springs ───────────────────────────────────────────────────────────
 
-const SPRING_EXPAND = { type: 'spring' as const, stiffness: 520, damping: 38, mass: 0.8 };
+const SPRING_EXPAND = {
+  type: 'spring' as const,
+  stiffness: 520,
+  damping: 38,
+  mass: 0.8,
+};
 const SPRING_CONTENT = { type: 'spring' as const, stiffness: 550, damping: 42 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -615,7 +626,13 @@ const PHASE_IS_DAYTIME: Record<SolarPhase, boolean> = {
   sunset: false,
   dusk: false,
 };
-const SIZE_SCALE: Record<string, number> = { xs: 0.55, sm: 0.7, md: 0.82, lg: 0.92, xl: 1.05 };
+const SIZE_SCALE: Record<string, number> = {
+  xs: 0.55,
+  sm: 0.7,
+  md: 0.82,
+  lg: 0.92,
+  xl: 1.05,
+};
 const PHASE_TEMP: Record<SolarPhase, number> = {
   midnight: 12,
   night: 13,
@@ -691,7 +708,9 @@ function pillArrowPath(dir: ExpandDirection): string {
   }
 }
 function collapseButtonSide(dir: ExpandDirection): 'right' | 'left' {
-  if (dir === 'top-left' || dir === 'bottom-left' || dir === 'center-left') return 'left';
+  if (dir === 'top-left' || dir === 'bottom-left' || dir === 'center-left') {
+    return 'left';
+  }
   return 'right';
 }
 const CATEGORY_META: Record<WeatherCategory, { description: string }> = {
@@ -740,13 +759,14 @@ export function FoundryWidget({
 }: WidgetSkinProps & FoundryExtras) {
   const { coordsReady } = useSolarTheme();
 
-  const [storedExpanded, setStoredExpanded] = useState(true);
-  useEffect(() => {
+  const [storedExpanded, setStoredExpanded] = useState(() => {
+    if (typeof window === 'undefined') return true;
     try {
       const raw = localStorage.getItem('solar-widget-expanded');
-      if (raw != null) setStoredExpanded(JSON.parse(raw));
+      if (raw != null) return JSON.parse(raw);
     } catch {}
-  }, []);
+    return true;
+  });
   const updateExpanded = useCallback((next: boolean) => {
     setStoredExpanded(next);
     try {
@@ -773,6 +793,12 @@ export function FoundryWidget({
 
   const rawPalette = lerpPalette(PALETTES[blend.phase], PALETTES[blend.nextPhase], blend.t);
   const palette = { ...rawPalette, bg: passedPalette.bg };
+  const bgOverridden =
+    passedPalette.bg[0] !== rawPalette.bg[0] ||
+    passedPalette.bg[1] !== rawPalette.bg[1] ||
+    passedPalette.bg[2] !== rawPalette.bg[2];
+  const effectivePillBg = bgOverridden ? `${passedPalette.bg[1]}f7` : palette.pillBg;
+  const effectivePillBorder = bgOverridden ? `${passedPalette.bg[0]}59` : palette.pillBorder;
   const phaseColors = derivePhaseColors(blend, 'foundry');
 
   const countryInfo = useMemo(() => {
@@ -871,7 +897,9 @@ export function FoundryWidget({
     : null;
   const expandedSublabel =
     showWeather && effectiveWeatherCategory
-      ? `${effectiveWeatherDescription} · ${temperatureUnit === 'F' ? `${toF(tempC)}°F` : `${tempC}°C`}`
+      ? `${effectiveWeatherDescription} · ${
+          temperatureUnit === 'F' ? `${toF(tempC)}°F` : `${tempC}°C`
+        }`
       : palette.sublabel;
 
   const pillShowWeather =
@@ -926,7 +954,9 @@ export function FoundryWidget({
             {/* Outer glow — fills the layout box */}
             <motion.div
               className="absolute inset-0 rounded-[1.8rem] pointer-events-none"
-              animate={{ boxShadow: `0 0 55px 18px ${palette.outerGlow}` }}
+              animate={{
+                boxShadow: `0 0 55px 18px ${palette.outerGlow}`,
+              }}
               transition={{ duration: 1.2 }}
             />
 
@@ -959,16 +989,23 @@ export function FoundryWidget({
                   className="absolute inset-0"
                   style={{ zIndex: 0 }}
                   animate={{
-                    background: `linear-gradient(155deg,${palette.bg[0]} 0%,${palette.bg[1]} 52%,${palette.bg[2]} 100%)`,
+                    background: `linear-gradient(155deg,${palette.bg[0]} 0%,${palette.bg[1]} 52%,${
+                      palette.bg[2]
+                    } 100%)`,
                   }}
-                  transition={{ duration: 1.2, ease: 'easeInOut' }}
+                  transition={{
+                    duration: 1.2,
+                    ease: 'easeInOut',
+                  }}
                 />
 
                 {/* z=1 Stars */}
                 <motion.div
                   className="absolute inset-0 overflow-hidden"
                   style={{ zIndex: 1 }}
-                  animate={{ opacity: palette.showStars ? 0.75 : 0 }}
+                  animate={{
+                    opacity: palette.showStars ? 0.75 : 0,
+                  }}
                   transition={{ duration: 1 }}
                 >
                   {Array.from({ length: 32 }).map((_, i) => (
@@ -982,7 +1019,9 @@ export function FoundryWidget({
                         left: `${sr(i * 7 + 1) * 95}%`,
                         top: `${sr(i * 11 + 2) * 55}%`,
                       }}
-                      animate={{ opacity: [0.25, 0.9, 0.25] }}
+                      animate={{
+                        opacity: [0.25, 0.9, 0.25],
+                      }}
                       transition={{
                         duration: 1.8 + sr(i * 5) * 2.5,
                         repeat: Number.POSITIVE_INFINITY,
@@ -1049,7 +1088,9 @@ export function FoundryWidget({
                   <g
                     ref={moonGRef}
                     opacity={isNight && palette.showMoon ? '0.85' : '0'}
-                    style={{ transition: 'opacity 0.8s' }}
+                    style={{
+                      transition: 'opacity 0.8s',
+                    }}
                   >
                     <circle
                       ref={moonBodyRef}
@@ -1111,15 +1152,21 @@ export function FoundryWidget({
                           fontFamily: "'SF Pro Display','Helvetica Neue',sans-serif",
                           letterSpacing: '0.015em',
                         }}
-                        animate={{ color: palette.textPrimary }}
+                        animate={{
+                          color: palette.textPrimary,
+                        }}
                         transition={{ duration: 1 }}
                       >
                         {palette.label}
                       </motion.p>
                       <motion.p
                         className="text-[10px] mt-0.5 uppercase tracking-[0.15em]"
-                        style={{ fontFamily: "'SF Pro Text','Helvetica Neue',sans-serif" }}
-                        animate={{ color: palette.textSecondary }}
+                        style={{
+                          fontFamily: "'SF Pro Text','Helvetica Neue',sans-serif",
+                        }}
+                        animate={{
+                          color: palette.textSecondary,
+                        }}
                         transition={{ duration: 1 }}
                       >
                         {expandedSublabel}
@@ -1133,7 +1180,9 @@ export function FoundryWidget({
                         opacity: hasTempData ? 1 : 0,
                         transition: 'opacity 0.8s ease-in-out',
                       }}
-                      animate={{ color: palette.textPrimary }}
+                      animate={{
+                        color: palette.textPrimary,
+                      }}
                       transition={{ duration: 1 }}
                     >
                       {displayTempStr}
@@ -1145,7 +1194,9 @@ export function FoundryWidget({
                 <motion.div
                   className="absolute bottom-0 left-0 right-0 px-5 pb-[14px] flex items-center justify-between"
                   style={{ zIndex: 5 }}
-                  animate={{ color: palette.textSecondary }}
+                  animate={{
+                    color: palette.textSecondary,
+                  }}
                   transition={{ duration: 1 }}
                 >
                   <span
@@ -1161,10 +1212,18 @@ export function FoundryWidget({
                   {flagActive ? (
                     <motion.span
                       key={countryInfo?.name}
-                      initial={{ opacity: 0, y: 3 }}
-                      animate={{ opacity: 0.75, y: 0 }}
+                      initial={{
+                        opacity: 0,
+                        y: 3,
+                      }}
+                      animate={{
+                        opacity: 0.75,
+                        y: 0,
+                      }}
                       exit={{ opacity: 0, y: 3 }}
-                      transition={{ duration: 0.55 }}
+                      transition={{
+                        duration: 0.55,
+                      }}
                       style={{
                         display: 'flex',
                         alignItems: 'center',
@@ -1230,10 +1289,22 @@ export function FoundryWidget({
                       <motion.button
                         onClick={() => setIsExpanded(false)}
                         className="flex items-center justify-center cursor-pointer"
-                        initial={{ opacity: 0, scale: 0.6 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.6 }}
-                        transition={{ ...SPRING_CONTENT, delay: 0.18 }}
+                        initial={{
+                          opacity: 0,
+                          scale: 0.6,
+                        }}
+                        animate={{
+                          opacity: 1,
+                          scale: 1,
+                        }}
+                        exit={{
+                          opacity: 0,
+                          scale: 0.6,
+                        }}
+                        transition={{
+                          ...SPRING_CONTENT,
+                          delay: 0.18,
+                        }}
                         whileHover={{ scale: 1.08 }}
                         whileTap={{ scale: 0.92 }}
                         aria-label="Collapse solar widget"
@@ -1279,8 +1350,8 @@ export function FoundryWidget({
               paddingLeft: 10,
               paddingRight: 14,
               borderRadius: 18,
-              background: palette.pillBg,
-              border: `1.5px solid ${palette.pillBorder}`,
+              background: effectivePillBg,
+              border: `1.5px solid ${effectivePillBorder}`,
               boxShadow: `0 4px 20px rgba(0,0,0,0.28),0 0 20px 4px ${palette.outerGlow}`,
               backdropFilter: 'blur(12px)',
               transformOrigin: origin,
@@ -1305,10 +1376,24 @@ export function FoundryWidget({
                 {pillShowWeather && effectiveWeatherCategory ? (
                   <motion.span
                     key={`glyph-${effectiveWeatherCategory}`}
-                    initial={{ opacity: 0, scale: 0.65 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.65 }}
-                    transition={{ type: 'spring', stiffness: 480, damping: 32, mass: 0.7 }}
+                    initial={{
+                      opacity: 0,
+                      scale: 0.65,
+                    }}
+                    animate={{
+                      opacity: 1,
+                      scale: 1,
+                    }}
+                    exit={{
+                      opacity: 0,
+                      scale: 0.65,
+                    }}
+                    transition={{
+                      type: 'spring',
+                      stiffness: 480,
+                      damping: 32,
+                      mass: 0.7,
+                    }}
                     style={{
                       position: 'absolute',
                       display: 'flex',
@@ -1328,10 +1413,24 @@ export function FoundryWidget({
                 ) : (
                   <motion.span
                     key="phase-icon"
-                    initial={{ opacity: 0, scale: 0.65 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.65 }}
-                    transition={{ type: 'spring', stiffness: 480, damping: 32, mass: 0.7 }}
+                    initial={{
+                      opacity: 0,
+                      scale: 0.65,
+                    }}
+                    animate={{
+                      opacity: 1,
+                      scale: 1,
+                    }}
+                    exit={{
+                      opacity: 0,
+                      scale: 0.65,
+                    }}
+                    transition={{
+                      type: 'spring',
+                      stiffness: 480,
+                      damping: 32,
+                      mass: 0.7,
+                    }}
                     style={{
                       position: 'absolute',
                       display: 'flex',
@@ -1349,8 +1448,14 @@ export function FoundryWidget({
               <motion.span
                 initial={{ opacity: 0, scale: 0.55 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.4, ease: [0.34, 1.56, 0.64, 1] }}
-                style={{ display: 'flex', alignItems: 'center' }}
+                transition={{
+                  duration: 0.4,
+                  ease: [0.34, 1.56, 0.64, 1],
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
               >
                 <PillFlagBadge
                   code={countryInfo.code}
@@ -1388,7 +1493,9 @@ export function FoundryWidget({
 
             <motion.span
               className="text-[11px] uppercase tracking-[0.1em]"
-              style={{ fontFamily: "'SF Pro Text','Helvetica Neue',sans-serif" }}
+              style={{
+                fontFamily: "'SF Pro Text','Helvetica Neue',sans-serif",
+              }}
               animate={{ color: palette.textSecondary }}
               transition={{ duration: 2 }}
             >
