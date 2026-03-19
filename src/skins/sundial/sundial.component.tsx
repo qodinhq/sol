@@ -1434,6 +1434,7 @@ export function SundialWidget({
                 fontSize: 10,
                 fontWeight: 400,
                 letterSpacing: '0.12em',
+                whiteSpace: 'nowrap',
               }}
               animate={{ color: palette.textSecondary }}
               transition={{ duration: 2 }}

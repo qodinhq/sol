@@ -1162,6 +1162,7 @@ export function SignalWidget({
                 letterSpacing: '0.12em',
                 textTransform: 'uppercase',
                 color: palette.textPrimary,
+                whiteSpace: 'nowrap',
               }}
             >
               {palette.phaseCode}

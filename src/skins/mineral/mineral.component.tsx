@@ -1497,6 +1497,7 @@ export function MineralWidget({
                 fontWeight: 400,
                 letterSpacing: '0.06em',
                 textTransform: 'uppercase',
+                whiteSpace: 'nowrap',
               }}
               animate={{ color: palette.textSecondary }}
               transition={{ duration: 1.2 }}

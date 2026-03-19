@@ -1521,6 +1521,7 @@ export function TideWidget({
                 fontWeight: 500,
                 letterSpacing: '0.16em',
                 textTransform: 'uppercase',
+                whiteSpace: 'nowrap',
               }}
               animate={{ color: palette.textSecondary }}
               transition={{ duration: 2 }}

@@ -1494,6 +1494,7 @@ export function AuroraWidget({
                 fontSize: 11,
                 fontWeight: 400,
                 letterSpacing: '0.01em',
+                whiteSpace: 'nowrap',
               }}
               animate={{ color: palette.textSecondary }}
               transition={{ duration: 1.4 }}

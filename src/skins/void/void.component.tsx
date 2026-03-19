@@ -1147,6 +1147,7 @@ export function VoidWidget({
                 textTransform: 'lowercase',
                 color: palette.textPrimary,
                 opacity: 0.4,
+                whiteSpace: 'nowrap',
               }}
               className="group-hover:opacity-68 transition-opacity duration-300"
             >

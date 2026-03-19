@@ -1192,6 +1192,7 @@ export function ParchmentWidget({
                 fontWeight: 400,
                 color: N_TEXT_MED,
                 letterSpacing: '0.01em',
+                whiteSpace: 'nowrap',
               }}
             >
               {PHASE_LABEL[phase]}

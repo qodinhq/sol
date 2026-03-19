@@ -1512,6 +1512,7 @@ export function FoundryWidget({
               className="text-[11px] uppercase tracking-[0.1em]"
               style={{
                 fontFamily: "'SF Pro Text','Helvetica Neue',sans-serif",
+                whiteSpace: 'nowrap',
               }}
               animate={{ color: palette.textSecondary }}
               transition={{ duration: 2 }}

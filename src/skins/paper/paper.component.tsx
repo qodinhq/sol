@@ -1392,6 +1392,7 @@ export function PaperWidget({
                 fontStyle: 'italic',
                 fontSize: 11,
                 letterSpacing: '0.08em',
+                whiteSpace: 'nowrap',
               }}
               animate={{ color: palette.textSecondary }}
               transition={{ duration: 2 }}
