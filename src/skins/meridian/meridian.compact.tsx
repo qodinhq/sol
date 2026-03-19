@@ -569,7 +569,8 @@ export function MeridianCompact({
                   letterSpacing: '0.04em',
                   fontWeight: 400,
                   lineHeight: 1,
-                  minWidth: 24,
+                  textAlign: 'right', 
+
                 }}
                 animate={{ color: pal.textPrimary, opacity: tempStr ? 1 : 0 }}
                 transition={{ duration: 1.5 }}

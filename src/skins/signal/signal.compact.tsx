@@ -547,7 +547,7 @@ export function SignalCompact({
                   letterSpacing: '0.04em',
                   fontWeight: 700,
                   lineHeight: 1,
-                  minWidth: 24,
+                  textAlign: 'right', 
                 }}
                 animate={{ color: pal.accent, opacity: tempStr ? 1 : 0 }}
                 transition={CONTENT_FADE}

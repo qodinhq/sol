@@ -789,7 +789,8 @@ export function AuroraCompact({
                   letterSpacing: '0.03em',
                   fontWeight: 400,
                   lineHeight: 1,
-                  minWidth: 24,
+                  textAlign: 'right', 
+
                 }}
                 animate={{ color: pal.text, opacity: tempStr ? 1 : 0 }}
                 transition={{ duration: 1.4 }}

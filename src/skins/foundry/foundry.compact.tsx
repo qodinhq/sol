@@ -733,7 +733,7 @@ export function FoundryCompact({
                   letterSpacing: '-0.01em',
                   fontWeight: 500,
                   lineHeight: 1,
-                  minWidth: 24,
+                  textAlign: 'right', 
                 }}
                 animate={{ color: palette.pillText, opacity: tempStr ? 1 : 0 }}
                 transition={{ duration: 1.2 }}

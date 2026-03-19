@@ -782,7 +782,7 @@ export function SundialCompact({
                   fontSize: size.labelSize,
                   lineHeight: 1,
                   fontWeight: 400,
-                  minWidth: 24,
+                  textAlign: 'right', 
                 }}
                 animate={{ color: pal.accentColor, opacity: tempStr ? 1 : 0 }}
                 transition={{ duration: 1.8 }}

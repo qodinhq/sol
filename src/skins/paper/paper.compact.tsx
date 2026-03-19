@@ -654,7 +654,7 @@ export function PaperCompact({
                   fontSize: size.labelSize,
                   lineHeight: 1,
                   fontWeight: 500,
-                  minWidth: 24,
+                  textAlign: 'right', 
                 }}
                 animate={{ color: pal.textPrimary, opacity: tempStr ? 1 : 0 }}
                 transition={CONTENT_FADE}
