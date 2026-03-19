@@ -142,6 +142,7 @@ export interface CompactWidgetProps {
   flag?: string;
   temperature?: string;
   weather?: WeatherCategory | null;
+  weatherCategoryOverride?: WeatherCategory | null;
   showFlag?: boolean;
   showWeather?: boolean;
   showTemperature?: boolean;
@@ -189,6 +190,7 @@ export function CompactWidget({
   flag,
   temperature,
   weather = null,
+  weatherCategoryOverride,
   showFlag = false,
   showWeather = false,
   showTemperature = true,
@@ -239,7 +241,7 @@ export function CompactWidget({
   const liveWeather = useWeatherData(resolvedLat ?? null, resolvedLon ?? null);
 
   const liveWeatherCategory: WeatherCategory | null = showWeather
-    ? (weather ?? liveWeather?.category ?? null)
+    ? (weatherCategoryOverride ?? weather ?? liveWeather?.category ?? null)
     : null;
 
   const liveTemperatureC: number | null = liveWeather?.temperatureC ?? null;

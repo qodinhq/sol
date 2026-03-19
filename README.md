@@ -366,6 +366,7 @@ The slim pill/bar variant. Accepts an optional `design` prop to override the pro
 | `showFlag` | `boolean` | `false` | Show country flag |
 | `showTemperature` | `boolean` | `true` | Show live temperature |
 | `overridePhase` | `SolarPhase \| null` | — | Force a discrete phase |
+| `weatherCategoryOverride` | `WeatherCategory \| null` | — | Force a weather category for preview |
 | `customPalettes` | `CustomPalettes` | — | Override bg gradient per phase |
 | `simulatedDate` | `Date` | — | Simulate a time |
 | `className` | `string` | — | Wrapper CSS class |
@@ -411,6 +412,9 @@ Supported positions: `top-left` `top-center` `top-right` `center-left` `center` 
 
 // Force a category for preview
 <SolarWidget showWeather weatherCategoryOverride="thunder" />
+
+// Works on CompactWidget too
+<CompactWidget showWeather weatherCategoryOverride="thunder" />
 ```
 
 Powered by [Open-Meteo](https://open-meteo.com/) — free, no API key. Available categories: `clear` `partly-cloudy` `overcast` `fog` `drizzle` `rain` `heavy-rain` `snow` `heavy-snow` `thunder`
