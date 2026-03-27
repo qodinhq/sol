@@ -58,6 +58,7 @@ deno add npm:@circadian/sol
 - **2 widget variants** — `SolarWidget` (full card) and `CompactWidget` (slim pill/bar)
 - **10 skins** — `foundry`, `paper`, `signal`, `meridian`, `mineral`, `aurora`, `tide`, `void`, `sundial`, `parchment`
 - **9 solar phases** — `midnight`, `night`, `dawn`, `sunrise`, `morning`, `solar-noon`, `afternoon`, `sunset`, `dusk`
+- **4 seasons** — automatic seasonal palette blending computed from date + hemisphere, with smooth crossfades at solstice/equinox boundaries
 - **Built-in fallback strategy** — geolocation → browser timezone → timezone centroid
 - **Optional live weather** — powered by Open-Meteo (no API key required)
 - **Dev preview tooling** — `SolarDevTools` lets you scrub through the day and preview phase colors
@@ -537,6 +538,105 @@ Each `bg` is a 3-stop gradient: `[top, middle, bottom]`. Only the phases you spe
 
 ---
 
+## Seasonal Blending
+
+Sol automatically adjusts every skin's palette based on the current astronomical season. Spring shifts greener and brighter, summer pushes warm and saturated, autumn mutes toward amber, winter desaturates toward icy blue. The effect is subtle by design — visible but never harsh.
+
+Season is computed from the current date and the user's latitude (southern hemisphere seasons are flipped). Near each solstice and equinox, a smooth 14-day crossfade blends between adjacent seasons.
+
+**Zero config — it just works:**
+
+```tsx
+<SolarThemeProvider initialDesign="foundry">
+  <SolarWidget showWeather showFlag />
+</SolarThemeProvider>
+```
+
+**Force a season:**
+
+```tsx
+<SolarThemeProvider initialDesign="foundry" seasonOverride="autumn">
+  <SolarWidget showWeather showFlag />
+</SolarThemeProvider>
+```
+
+**Disable seasonal blending entirely:**
+
+```tsx
+<SolarThemeProvider initialDesign="foundry" disableSeasonalBlend>
+  <SolarWidget showWeather showFlag />
+</SolarThemeProvider>
+```
+
+**Read the current season in your own components:**
+
+```tsx
+import { useSolarTheme } from '@circadian/sol';
+
+function SeasonBadge() {
+  const { season } = useSolarTheme();
+  return <span>{season}</span>; // 'spring' | 'summer' | 'autumn' | 'winter'
+}
+```
+
+### How it works
+
+Rather than defining 36 full palettes (9 phases × 4 seasons), each skin only needs 4 small seasonal modifier objects that describe _deltas_ — saturation scale, lightness shift, hue rotation, and an optional tint wash. The final palette is computed as:
+
+```
+rawPalette   = lerp(phasePalette, nextPhasePalette, phaseT)
+seasonalMod  = lerp(seasonModifier, nextSeasonModifier, seasonT)
+finalPalette = applySeasonalModifier(rawPalette, seasonalMod)
+```
+
+### Custom skin seasonal modifiers
+
+Skins can define their own per-season modifiers. Any season not defined falls back to the built-in universal defaults.
+
+```ts
+import type { SkinDefinition } from '@circadian/sol';
+
+const mySkin: SkinDefinition = {
+  // ... existing skin definition ...
+  seasonalModifiers: {
+    autumn: {
+      saturationScale: 0.85,   // slightly muted
+      lightnessShift:  -0.05,  // darker
+      hueRotateDeg:    -22,    // shift toward amber
+      tintColor:       '#b85c1a',
+      tintStrength:    0.12,
+    },
+    winter: {
+      saturationScale: 0.78,
+      lightnessShift:  -0.06,
+      hueRotateDeg:    -30,
+      tintColor:       '#6a9fc0',
+      tintStrength:    0.09,
+    },
+    // spring and summer use UNIVERSAL_SEASON_MODIFIERS automatically
+  },
+};
+```
+
+### SeasonalModifier shape
+
+| Field | Type | Description |
+|---|---|---|
+| `saturationScale` | `number` | Multiply saturation. `1.0` = unchanged, `1.2` = +20% |
+| `lightnessShift` | `number` | Add to lightness. `-0.05` = slightly darker |
+| `hueRotateDeg` | `number` | Rotate hue in degrees. `+15` = warmer, `-15` = cooler |
+| `tintColor` | `string?` | Optional hex color to blend toward |
+| `tintStrength` | `number` | `0–1`. How strongly to apply tintColor |
+
+### Provider props
+
+| Prop | Type | Default | Description |
+|---|---|---|---|
+| `seasonOverride` | `Season` | — | Force a specific season (`'spring'` \| `'summer'` \| `'autumn'` \| `'winter'`) |
+| `disableSeasonalBlend` | `boolean` | `false` | Opt out of seasonal palette blending entirely |
+
+---
+
 ## SolarDevTools
 
 When your interface depends on live solar time, manual testing breaks down fast — you can't wait until sunset to test sunset. `SolarDevTools` lets you scrub through the full day in seconds, preview every one of the **9 phases**, test every skin against every time of day, and catch phase-specific visual bugs before your users do.
@@ -612,6 +712,9 @@ function DebugPanel() {
 | `activeSkin` | `SkinDefinition` | Full skin definition object |
 | `setOverridePhase` | `(phase \| null) => void` | Set/clear phase override |
 | `setDesign` | `(skin: DesignMode) => void` | Change active skin |
+| `season` | `Season` | Current dominant season |
+| `seasonalBlend` | `SeasonalBlend` | Season blend state (season, nextSeason, t) |
+| `setSeasonOverride` | `(season \| null) => void` | Set/clear season override |
 
 ---
 
@@ -644,6 +747,9 @@ import type {
   WidgetPalette,
   CustomPalettes,
   SolarTheme,
+  Season,
+  SeasonalBlend,
+  SeasonalModifier,
 } from '@circadian/sol';
 ```
 
@@ -655,6 +761,7 @@ import type {
 |---|---|
 | ✅ | Full widget + compact widget |
 | ✅ | 10 skins with full + compact variants |
+| ✅ | Automatic seasonal palette blending (4 seasons) |
 | ✅ | Solar math (NOAA equations, no external API) |
 | ✅ | Timezone fallback logic |
 | ✅ | Optional live weather (Open-Meteo) |
@@ -673,7 +780,6 @@ import type {
 
 Sol is actively being developed. Things in progress:
 
-- **Seasonal theme system** — 4 seasons (Summer, Autumn, Winter, Spring) that blend automatically with the existing 9-phase system, computed from date and location with no configuration required
 - More skins
 - Vue and Svelte adapters
 - Deep token override system

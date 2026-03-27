@@ -25,3 +25,15 @@ export type { CompactSize } from './widgets/compact-widget.shell';
 
 // Types — from provider
 export type { SolarTheme } from './provider/solar-theme-provider';
+
+// Seasonal system
+export type { Season, SeasonalBlend } from './lib/useSeason';
+export { useSeason, getSeasonalBlend } from './lib/useSeason';
+export type { SeasonalModifier } from './lib/seasonal-blend';
+export {
+  IDENTITY_MODIFIER,
+  UNIVERSAL_SEASON_MODIFIERS,
+  lerpModifier,
+  applySeasonalModifier,
+  resolveSeasonalModifier,
+} from './lib/seasonal-blend';

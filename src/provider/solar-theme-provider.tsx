@@ -32,9 +32,15 @@ import {
 } from '../hooks/useSolarPosition';
 import { useCountryCodeFromGeolocation } from '../lib/geolocation';
 import { injectWidgetCSS } from '../lib/inject-widget-css';
+import {
+  UNIVERSAL_SEASON_MODIFIERS,
+  applySeasonalModifier,
+  resolveSeasonalModifier,
+} from '../lib/seasonal-blend';
 import { lerpHex } from '../lib/solar-lerp';
 import { getSessionPhaseOverride, setSessionPhaseOverride } from '../lib/solar-phase-session';
 import { getBrowserTimezone, getCentroidForTimezone } from '../lib/tz-centroids';
+import { type Season, type SeasonalBlend, useSeason } from '../lib/useSeason';
 import { type DesignMode, SKINS, type SkinDefinition } from '../skins/index';
 import { SKIN_COPY } from '../widgets/skin-copy';
 import type { CustomPalettes } from '../widgets/solar-widget.shell';
@@ -64,6 +70,12 @@ export interface SolarTheme {
   /** Custom palette overrides registered by the nearest widget. */
   customPalettes: CustomPalettes | undefined;
   setCustomPalettes: (palettes: CustomPalettes | undefined) => void;
+  /** Current dominant season. */
+  season: Season;
+  /** Full seasonal blend state (season, nextSeason, crossfade t). */
+  seasonalBlend: SeasonalBlend;
+  /** Override the auto-detected season, or pass null to restore auto-detection. */
+  setSeasonOverride: (season: Season | null) => void;
 }
 
 // ─── Static lookups ───────────────────────────────────────────────────────────
@@ -200,6 +212,7 @@ function writeCssVars(
   t = 0,
   nextPhase?: SolarPhase,
   scopeId?: string,
+  seasonal?: { blend: SeasonalBlend; disabled: boolean },
 ): void {
   if (typeof document === 'undefined') return;
   const from = skin.phaseVars[phase];
@@ -215,11 +228,25 @@ function writeCssVars(
 
   const shaderPalFrom = skin.shaderPalettes[phase];
   const shaderPalTo = skin.shaderPalettes[nextPhase ?? phase];
-  const shaderVignette =
+
+  let shaderVignette =
     t > 0 ? lerpHex(shaderPalFrom.vignette, shaderPalTo.vignette, t) : shaderPalFrom.vignette;
-  const shaderColorBack =
+  let shaderColorBack =
     t > 0 ? lerpHex(shaderPalFrom.colorBack, shaderPalTo.colorBack, t) : shaderPalFrom.colorBack;
   const shaderFallback = shaderPalFrom.cssFallback;
+
+  if (seasonal && !seasonal.disabled) {
+    const mod = resolveSeasonalModifier(seasonal.blend, {
+      ...UNIVERSAL_SEASON_MODIFIERS,
+      ...skin.seasonalModifiers,
+    });
+    const tempPalette = applySeasonalModifier(
+      { ...shaderPalFrom, vignette: shaderVignette, colorBack: shaderColorBack },
+      mod,
+    );
+    shaderVignette = tempPalette.vignette;
+    shaderColorBack = tempPalette.colorBack;
+  }
 
   // In global mode, also keep the data-solar-skin attribute on <html> in sync.
   if (!scopeId) {
@@ -273,6 +300,9 @@ const SolarThemeCtx = createContext<SolarTheme>({
   setSimulatedDate: noop,
   customPalettes: undefined,
   setCustomPalettes: noop,
+  season: 'spring',
+  seasonalBlend: { season: 'spring', nextSeason: 'spring', t: 0 },
+  setSeasonOverride: noop,
 });
 
 export function useSolarTheme(): SolarTheme {
@@ -291,12 +321,24 @@ interface Props {
    * (e.g. a skin showcase / test page). Defaults to false.
    */
   isolated?: boolean;
+  /**
+   * Force a specific season, bypassing astronomical computation.
+   * Useful for testing, user preferences, or themed marketing pages.
+   */
+  seasonOverride?: Season;
+  /**
+   * Opt out of seasonal palette blending entirely.
+   * When true, palettes are exactly as defined in the skin. Default: false.
+   */
+  disableSeasonalBlend?: boolean;
 }
 
 export function SolarThemeProvider({
   children,
   initialDesign = 'foundry',
   isolated = false,
+  seasonOverride: seasonOverrideProp,
+  disableSeasonalBlend = false,
 }: Props) {
   const geo = useCountryCodeFromGeolocation({ immediate: true });
 
@@ -384,6 +426,17 @@ export function SolarThemeProvider({
 
   const activeSkin = SKINS[design];
 
+  // ── Seasonal blend ──────────────────────────────────────────────────────────
+  const [seasonOverrideState, setSeasonOverrideState] = useState<Season | undefined>(
+    seasonOverrideProp,
+  );
+  const effectiveSeasonOverride = seasonOverrideProp ?? seasonOverrideState;
+  const seasonalBlend = useSeason(latitude, effectiveSeasonOverride, simulatedDate);
+  const setSeasonOverride = useCallback(
+    (s: Season | null) => setSeasonOverrideState(s ?? undefined),
+    [],
+  );
+
   // ── Override phase setter ────────────────────────────────────────────────────
   const setOverridePhase = useCallback(
     (phase: SolarPhase | null) => {
@@ -435,14 +488,17 @@ export function SolarThemeProvider({
 
   // ── Write CSS vars ─────────────────────────────────────────────────────────
   useLayoutEffect(() => {
-    writeCssVars(activeSkin, activeBlend.phase, activeBlend.t, activeBlend.nextPhase, scopeId);
+    writeCssVars(activeSkin, activeBlend.phase, activeBlend.t, activeBlend.nextPhase, scopeId, {
+      blend: seasonalBlend,
+      disabled: disableSeasonalBlend,
+    });
 
     if (!isolated && !document.documentElement.hasAttribute('data-solar-ready')) {
       requestAnimationFrame(() => {
         document.documentElement.setAttribute('data-solar-ready', '');
       });
     }
-  }, [activeSkin, activeBlend, scopeId, isolated]);
+  }, [activeSkin, activeBlend, scopeId, isolated, seasonalBlend, disableSeasonalBlend]);
 
   // ── Cleanup scoped style tag on unmount ────────────────────────────────────
   useEffect(() => {
@@ -476,6 +532,9 @@ export function SolarThemeProvider({
     setSimulatedDate,
     customPalettes,
     setCustomPalettes,
+    season: seasonalBlend.season,
+    seasonalBlend,
+    setSeasonOverride,
   };
 
   if (isolated) {

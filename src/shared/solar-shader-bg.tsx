@@ -13,7 +13,13 @@ import {
   useState,
 } from 'react';
 import type { SolarBlend, SolarPhase } from '../hooks/useSolarPosition';
+import {
+  UNIVERSAL_SEASON_MODIFIERS,
+  applySeasonalModifier,
+  resolveSeasonalModifier,
+} from '../lib/seasonal-blend';
 import { lerpColor } from '../lib/solar-lerp';
+import type { SeasonalBlend } from '../lib/useSeason';
 import { useSolarTheme } from '../provider/solar-theme-provider';
 import type {
   ShaderImage,
@@ -145,11 +151,25 @@ function resolveImage(skin: SkinDefinition, palette: ShaderPalette): ShaderImage
 
 // ─── Core config computation ──────────────────────────────────────────────────
 
-function computeConfig(skin: SkinDefinition, blend: SolarBlend) {
+function computeConfig(
+  skin: SkinDefinition,
+  blend: SolarBlend,
+  seasonal?: { blend: SeasonalBlend; disabled: boolean },
+) {
   const motionProfile = resolveMotionProfile(skin);
   const { phase, nextPhase, t } = blend;
+  let palette = lerpPalette(skin.shaderPalettes[phase], skin.shaderPalettes[nextPhase], t);
+
+  if (seasonal && !seasonal.disabled) {
+    const mod = resolveSeasonalModifier(seasonal.blend, {
+      ...UNIVERSAL_SEASON_MODIFIERS,
+      ...skin.seasonalModifiers,
+    });
+    palette = applySeasonalModifier(palette, mod);
+  }
+
   return {
-    palette: lerpPalette(skin.shaderPalettes[phase], skin.shaderPalettes[nextPhase], t),
+    palette,
     motion: lerpMotion(motionProfile[phase], motionProfile[nextPhase], t),
   };
 }
@@ -439,18 +459,20 @@ export function SolarShaderBg({
   className,
   style,
 }: SolarShaderBgProps = {}) {
-  const { activeSkin, blend: contextBlend } = useSolarTheme();
+  const theme = useSolarTheme();
+  const { activeSkin, blend: contextBlend, seasonalBlend } = theme;
   const contextVariant = useShaderVariant();
 
   const skin = skinOverride ?? activeSkin;
   const blend = blendOverride ?? contextBlend;
   const variant = variantProp ?? contextVariant;
+  const seasonal = { blend: seasonalBlend, disabled: false };
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: intentional fine-grained deps — blend object reference changes every render; subscribing to specific fields avoids thrashing computeConfig
   const { palette, motion: rawMotion } = useMemo(
-    () => computeConfig(skin, blend),
+    () => computeConfig(skin, blend, seasonal),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [blend.phase, blend.nextPhase, blend.t, skin],
+    [blend.phase, blend.nextPhase, blend.t, skin, seasonalBlend.season, seasonalBlend.t],
   );
 
   const variantPalette = variant === 'editorial' ? applyEditorialPalette(palette) : palette;
@@ -576,14 +598,15 @@ export function useSolarShaderConfig(
     blendOverride?: SolarBlend;
   } = {},
 ) {
-  const { activeSkin, blend: contextBlend } = useSolarTheme();
+  const { activeSkin, blend: contextBlend, seasonalBlend } = useSolarTheme();
   const skin = opts.skinOverride ?? activeSkin;
   const blend = opts.blendOverride ?? contextBlend;
+  const seasonal = { blend: seasonalBlend, disabled: false };
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: intentional fine-grained deps — blend object reference changes every render; subscribing to specific fields avoids thrashing computeConfig
   return useMemo(
-    () => computeConfig(skin, blend),
+    () => computeConfig(skin, blend, seasonal),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [blend.phase, blend.nextPhase, blend.t, skin],
+    [blend.phase, blend.nextPhase, blend.t, skin, seasonalBlend.season, seasonalBlend.t],
   );
 }

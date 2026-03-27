@@ -6,6 +6,8 @@
  */
 
 import type { SolarBlend, SolarPhase } from '../../hooks/useSolarPosition';
+import type { SeasonalModifier } from '../../lib/seasonal-blend';
+import type { Season } from '../../lib/useSeason';
 import type { CompactSkinProps } from '../../widgets/compact-widget.shell';
 import type {
   ExpandDirection,
@@ -166,6 +168,13 @@ export interface SkinDefinition {
    *   }
    */
   defaultImage?: ShaderImage;
+
+  /**
+   * Optional per-season palette modifiers.
+   * If omitted, UNIVERSAL_SEASON_MODIFIERS is used automatically.
+   * Define only the seasons you want to customise — the rest fall back.
+   */
+  seasonalModifiers?: Partial<Record<Season, SeasonalModifier>>;
 
   /**
    * The React component that renders the actual widget pill + expanded card.
